@@ -178,21 +178,18 @@ describe('the line with a forecast', () => {
       seven_day: { used_percentage: 60, resets_at: sec('2026-10-09T12:00:00Z') },
     },
   })!
-  const base = { nowMs: now, zone: 'utc' as const, config: defaultConfig(), leadWithProject: true }
   const config = defaultConfig()
   config.segments.today = false
+  const base = { nowMs: now, zone: 'utc' as const, config, compact: true }
 
-  test('leads with the project and shows only the picked limit, with when it runs out', () => {
-    const line = toAnsi(
-      render(payload, { ...base, config, limits: { show: 'week', outAt: sec('2026-10-08T21:00:00Z') } }),
-      true,
-    )
-    expect(line).toBe('site \u00b7 Opus 5.5 \u00b7 w 60% (out Thu 9pm)')
+  test('the compact layout warns only of the picked limit running out, ahead of the project', () => {
+    const line = toAnsi(render(payload, { ...base, limits: { show: 'week', outAt: sec('2026-10-08T21:00:00Z') } }), true)
+    expect(line).toBe('w\u2192Thu 9pm \u00b7 site \u00b7 Opus 5.5')
   })
 
-  test('a session pick hides the week', () => {
-    const line = toAnsi(render(payload, { ...base, config, limits: { show: 'session' } }), true)
-    expect(line).toBe('site \u00b7 Opus 5.5 \u00b7 s 20%')
+  test('a pick that does not run out shows neither limit', () => {
+    const line = toAnsi(render(payload, { ...base, limits: { show: 'session' } }), true)
+    expect(line).toBe('site \u00b7 Opus 5.5')
   })
 
   test('without a pick both show, in the Go order', () => {

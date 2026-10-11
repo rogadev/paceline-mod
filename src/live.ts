@@ -120,14 +120,15 @@ export type LiveState = {
   run: Run | null
   activity: Activity | null
   nowMs: number
-  /** The limit the line showed last time, so a near tie doesn't flip it. */
+  /** The limit the forecast picked last time, so a near tie doesn't flip it. */
   previous?: LimitPick['show']
 }
 
 /**
- * The line, the limit it shows, and the snapshot to save when today's anchor
- * changed. The mod leads with the project and, unless the config asks for
- * both limits, shows only the one forecast to run out first.
+ * The line in the compact layout, the limit the forecast picked, and the
+ * snapshot to save when today's anchor changed. Unless the config asks for
+ * both limits, the line warns only when the picked limit is forecast to run
+ * out before it resets.
  */
 export function renderLive(
   payload: Payload,
@@ -157,7 +158,7 @@ export function renderLive(
     },
     branch: () => state.branch,
     progress: () => state.run,
-    leadWithProject: true,
+    compact: true,
     limits: pick ?? undefined,
   })
   return { line, pick, ...changed }

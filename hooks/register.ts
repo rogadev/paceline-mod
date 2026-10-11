@@ -25,7 +25,7 @@ const MAX_SNAPSHOT_BYTES = 4096
 // Module state starts over on a reload; the first refresh refills it.
 let line: Line = []
 let effort: string | undefined
-let shownLimit: LimitPick['show'] | undefined
+let lastPick: LimitPick['show'] | undefined
 let running: Promise<void> | null = null
 let again = false
 
@@ -115,9 +115,9 @@ async function liveLine($: EngineInterface): Promise<Line> {
     run,
     activity: recorded.activity,
     nowMs,
-    previous: shownLimit,
+    previous: lastPick,
   })
-  shownLimit = result.pick?.show
+  lastPick = result.pick?.show
   if (result.save) await $.store.set(SNAPSHOT_KEY, result.save)
   return result.line
 }

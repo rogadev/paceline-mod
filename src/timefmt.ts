@@ -46,6 +46,16 @@ export function startOfDay(ms: number, zone: Zone): number {
     : new Date(p.year, p.month, p.day).getTime()
 }
 
+/**
+ * Rounds `ms` down to a whole number of `stepMs` steps counted from
+ * `dayStartMs`, a midnight from `startOfDay`. Counting from the day's own
+ * midnight rather than the epoch keeps a zone with a half-hour offset on its
+ * own hours.
+ */
+export function floorInDay(ms: number, stepMs: number, dayStartMs: number): number {
+  return dayStartMs + Math.floor((ms - dayStartMs) / stepMs) * stepMs
+}
+
 /** The day that holds `ms` as `yyyymmdd`. */
 export function dateKey(ms: number, zone: Zone): string {
   const p = parts(ms, zone)
