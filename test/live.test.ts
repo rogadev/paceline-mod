@@ -202,7 +202,7 @@ describe('band', () => {
     const firstKids = segments[0].props.children as Node[]
     const secondKids = segments[1].props.children as Node[]
     expect(firstKids[0].props).toEqual({ color: 'cyan', children: ['Opus 5.5'] })
-    expect(secondKids[0].props).toEqual({ dimColor: true, children: [' \u00b7 '] })
+    expect(secondKids[0].props).toEqual({ color: '#767676', children: [' \u00b7 '] })
   })
 
   test('the terminal keeps its own palette; other surfaces get fixed colors', () => {
