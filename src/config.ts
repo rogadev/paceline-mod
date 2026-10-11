@@ -42,6 +42,12 @@ export type Config = {
   projectSlots: Record<string, number>
   /** Spells out the usage labels (`session 82% used`) instead of `s 82%`. */
   verbose: boolean
+  /**
+   * `auto` shows only the usage limit forecast to run out first; `both`
+   * shows the session and the week, as the Go paceline does. The Go paceline
+   * ignores this key.
+   */
+  limits: 'auto' | 'both'
 }
 
 /** Returns the built-in configuration. */
@@ -66,6 +72,7 @@ export function defaultConfig(): Config {
     quietEfforts: ['low', 'medium'],
     projectSlots: {},
     verbose: false,
+    limits: 'auto',
   }
 }
 
@@ -117,6 +124,8 @@ export function mergeConfig(doc: unknown): Config {
 
   const verbose = asBool(doc.verbose)
   if (verbose !== undefined) c.verbose = verbose
+
+  if (doc.limits === 'auto' || doc.limits === 'both') c.limits = doc.limits
   return c
 }
 

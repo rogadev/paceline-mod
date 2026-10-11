@@ -11,14 +11,17 @@
 import type { SessionRateLimit, SessionUsage } from 'claude-code'
 
 import type { Config } from './config.ts'
+import { forecastLimits, type Activity } from './forecast.ts'
 import { modelName } from './model.ts'
 import { isValidSnapshot, type Snapshot } from './pace.ts'
 import type { Limit, Payload } from './payload.ts'
 import type { Run } from './progress.ts'
-import { render, type Line } from './render.ts'
+import { render, type Line, type LimitPick } from './render.ts'
 
 /** Where this mod keeps today's budget snapshot in its `$.store`. */
 export const SNAPSHOT_KEY = 'day'
+/** Where this mod keeps its record of active hours, for the forecast. */
+export const ACTIVITY_KEY = 'activity'
 
 /** What the session reported for one refresh. */
 export type Figures = {
@@ -110,26 +113,52 @@ export function chooseSnapshot(
   return isValidSnapshot(stored) ? stored : null
 }
 
-/** The line, and the snapshot to save when today's anchor changed. */
+/** Everything a live render reads besides the payload and config. */
+export type LiveState = {
+  snapshot: Snapshot | null
+  branch: string
+  run: Run | null
+  activity: Activity | null
+  nowMs: number
+  /** The limit the line showed last time, so a near tie doesn't flip it. */
+  previous?: LimitPick['show']
+}
+
+/**
+ * The line, the limit it shows, and the snapshot to save when today's anchor
+ * changed. The mod leads with the project and, unless the config asks for
+ * both limits, shows only the one forecast to run out first.
+ */
 export function renderLive(
   payload: Payload,
   config: Config,
-  snapshot: Snapshot | null,
-  branch: string,
-  run: Run | null,
-  nowMs: number,
-): { line: Line; save?: Snapshot } {
+  state: LiveState,
+): { line: Line; pick: LimitPick | null; save?: Snapshot } {
+  const pick =
+    config.limits === 'auto'
+      ? forecastLimits({
+          nowMs: state.nowMs,
+          zone: 'local',
+          session: payload.rateLimits?.fiveHour,
+          week: payload.rateLimits?.sevenDay,
+          activity: state.activity,
+          weekAtDayStart: state.snapshot?.usedAtStart,
+          previous: state.previous,
+        })
+      : null
   const changed: { save?: Snapshot } = {}
   const line = render(payload, {
-    nowMs,
+    nowMs: state.nowMs,
     zone: 'local',
     config,
-    readSnapshot: () => snapshot,
+    readSnapshot: () => state.snapshot,
     saveSnapshot: s => {
       changed.save = s
     },
-    branch: () => branch,
-    progress: () => run,
+    branch: () => state.branch,
+    progress: () => state.run,
+    leadWithProject: true,
+    limits: pick ?? undefined,
   })
-  return { line, ...changed }
+  return { line, pick, ...changed }
 }

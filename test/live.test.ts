@@ -80,6 +80,9 @@ describe('config', () => {
     expect(c.countDown).toEqual({ session: false, week: true, today: false })
     expect(c.projectSlots).toEqual({ site: 4 })
     expect(c.verbose).toBe(true)
+    expect(c.limits).toBe('auto')
+    expect(parseConfig('{"limits": "both"}').limits).toBe('both')
+    expect(parseConfig('{"limits": "sideways"}').limits).toBe('auto')
   })
 
   test('a broken file or a section of the wrong type gives the defaults', () => {
@@ -149,13 +152,25 @@ describe('live adapter', () => {
     expect(toLimit(undefined)).toBe(undefined)
   })
 
-  test('renders the whole line and anchors today', () => {
+  const state = { snapshot: null, branch: 'dev', run: null, activity: null, nowMs }
+
+  test('renders the whole line, project first, and anchors today', () => {
     const p = toPayload(figures)
-    const { line, save } = renderLive(p, defaultConfig(), null, 'dev', null, nowMs)
+    const { line, save, pick } = renderLive(p, defaultConfig(), state)
     expect(save?.usedAtStart).toBe(4)
+    // Neither limit runs out; the session ends its window closer to 100%.
+    expect(pick).toEqual({ show: 'session' })
     const text = toAnsi(line, true)
-    expect(text.startsWith('Opus 5.5 \u00b7 high effort \u00b7 techcentral (dev) \u00b7 s 16% \u00b7 w 4% \u00b7 t 0% of ')).toBe(true)
+    expect(text.startsWith('techcentral (dev) \u00b7 Opus 5.5 \u00b7 high effort \u00b7 s 16% \u00b7 t 0% of ')).toBe(true)
     expect(text.endsWith(' \u00b7 ctx 72% \u00b7 16m')).toBe(true)
+  })
+
+  test('limits "both" shows the session and the week', () => {
+    const config = defaultConfig()
+    config.limits = 'both'
+    const { line, pick } = renderLive(toPayload(figures), config, state)
+    expect(pick).toBe(null)
+    expect(toAnsi(line, true).includes(' \u00b7 s 16% \u00b7 w 4% \u00b7 ')).toBe(true)
   })
 
   test("the Go paceline's anchor wins only for the same day and week", () => {

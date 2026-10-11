@@ -53,6 +53,20 @@ export type RenderContext = {
   branch?: (dir: string) => string
   /** The progress run of the repository holding `dir`, or null. */
   progress?: (dir: string) => Run | null
+  /** Puts the project ahead of the model. The Go paceline leads with the model. */
+  leadWithProject?: boolean
+  /**
+   * Which usage limit to show, from the forecast. Absent, both show, as in
+   * the Go paceline.
+   */
+  limits?: LimitPick
+}
+
+/** The one usage limit worth showing, and when it is forecast to run out. */
+export type LimitPick = {
+  show: 'session' | 'week'
+  /** Epoch seconds when the shown limit is forecast to run out, before it resets. */
+  outAt?: number
 }
 
 const span = (text: string, tone: Tone = 'plain'): Span => ({ text, tone })
@@ -83,6 +97,11 @@ export function render(p: Payload, ctx: RenderContext): Line {
   const label = (short: string, long: string) => (ctx.config.verbose ? long : short)
   const line: Line = []
 
+  // Folder, colored by project. The color comes from the project root, so a
+  // subfolder keeps its project's color.
+  const projectSegment = on.project ? project(p, ctx) : null
+  if (projectSegment && ctx.leadWithProject) line.push(projectSegment)
+
   // Model, minus any "(1M context)"-style suffix.
   if (on.model && p.model) {
     const model = clean(p.model.displayName, 64).replace(MODEL_SUFFIX, '')
@@ -99,12 +118,7 @@ export function render(p: Payload, ctx: RenderContext): Line {
 
   if (on.fastMode && p.fastMode === true) line.push([span('fast mode', 'yellow')])
 
-  // Folder, colored by project. The color comes from the project root, so a
-  // subfolder keeps its project's color.
-  if (on.project) {
-    const segment = project(p, ctx)
-    if (segment) line.push(segment)
-  }
+  if (projectSegment && !ctx.leadWithProject) line.push(projectSegment)
 
   // Usage limits: session, week, then today's share of the week. Each counts
   // up what's used from 0%, or down what's left from 100% when its
@@ -118,21 +132,27 @@ export function render(p: Payload, ctx: RenderContext): Line {
       : `${Math.min(Math.max(used, 0), 100)}%${label('', ' used')}`
     return { left, shown }
   }
+  // With a forecast, only the limit that runs out first shows, with the time
+  // it is forecast to run out.
+  const pick = ctx.limits
+  const outText = (show: LimitPick['show']) =>
+    pick?.show === show && pick.outAt !== undefined ? ` (out ${clock(pick.outAt, ctx.nowMs, ctx.zone)})` : ''
   const rl = p.rateLimits
   const fh = rl?.fiveHour
-  if (on.session && fh?.usedPercentage !== undefined) {
+  if (on.session && fh?.usedPercentage !== undefined && pick?.show !== 'week') {
     const { left, shown } = usage(fh.usedPercentage, ctx.config.countDown.session)
     const when =
-      left < th.headroomGreen && fh.resetsAt !== undefined
+      outText('session') ||
+      (left < th.headroomGreen && fh.resetsAt !== undefined
         ? ` (resets ${clock(fh.resetsAt, ctx.nowMs, ctx.zone)})`
-        : ''
+        : '')
     line.push([headroom(left, `${label('s', 'session')} ${shown}${when}`)])
   }
   const sd = rl?.sevenDay
   if (sd?.usedPercentage !== undefined) {
-    if (on.week) {
+    if (on.week && pick?.show !== 'session') {
       const { left, shown } = usage(sd.usedPercentage, ctx.config.countDown.week)
-      line.push([headroom(left, `${label('w', 'week')} ${shown}`)])
+      line.push([headroom(left, `${label('w', 'week')} ${shown}${outText('week')}`)])
     }
     if (on.today && sd.resetsAt !== undefined) {
       const segment = today(sd.usedPercentage, sd.resetsAt, ctx, headroom, label)
