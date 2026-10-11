@@ -1,0 +1,11 @@
+{
+  "name": "paceline",
+  "displayName": "paceline",
+  "version": "0.1.0",
+  "description": "Paces your Claude usage limits: today's budget, session and week limits, and where each session stands, in a line above the prompt",
+  "author": { "name": "Ryan Roga", "url": "https://github.com/rogadev" },
+  "homepage": "https://github.com/rogadev/paceline-mod",
+  "repository": "https://github.com/rogadev/paceline-mod",
+  "license": "MIT",
+  "keywords": ["usage", "rate-limits", "budget", "pace", "status-line"]
+}

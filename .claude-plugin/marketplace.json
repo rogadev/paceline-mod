@@ -1,0 +1,15 @@
+{
+  "name": "paceline-mod",
+  "description": "paceline for Claude Code as a mod: paces your usage limits in a line above the prompt",
+  "owner": {
+    "name": "Ryan Roga",
+    "url": "https://github.com/rogadev"
+  },
+  "plugins": [
+    {
+      "name": "paceline",
+      "source": "./",
+      "description": "Paces your Claude usage limits in a line above the prompt"
+    }
+  ]
+}

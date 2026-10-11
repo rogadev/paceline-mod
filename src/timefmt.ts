@@ -1,0 +1,77 @@
+/**
+ * Formats reset times and durations, and finds day boundaries, in one time
+ * zone: the machine's own in a session, UTC in the parity tests.
+ */
+
+/** Which clock calendar math reads: the machine's local time or UTC. */
+export type Zone = 'local' | 'utc'
+
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+type Parts = {
+  year: number
+  month: number
+  day: number
+  hour: number
+  minute: number
+  weekday: number
+}
+
+function parts(ms: number, zone: Zone): Parts {
+  const d = new Date(ms)
+  return zone === 'utc'
+    ? {
+        year: d.getUTCFullYear(),
+        month: d.getUTCMonth(),
+        day: d.getUTCDate(),
+        hour: d.getUTCHours(),
+        minute: d.getUTCMinutes(),
+        weekday: d.getUTCDay(),
+      }
+    : {
+        year: d.getFullYear(),
+        month: d.getMonth(),
+        day: d.getDate(),
+        hour: d.getHours(),
+        minute: d.getMinutes(),
+        weekday: d.getDay(),
+      }
+}
+
+/** Midnight at the start of the day that holds `ms`, in epoch milliseconds. */
+export function startOfDay(ms: number, zone: Zone): number {
+  const p = parts(ms, zone)
+  return zone === 'utc'
+    ? Date.UTC(p.year, p.month, p.day)
+    : new Date(p.year, p.month, p.day).getTime()
+}
+
+/** The day that holds `ms` as `yyyymmdd`. */
+export function dateKey(ms: number, zone: Zone): string {
+  const p = parts(ms, zone)
+  const pad = (n: number, width: number) => String(n).padStart(width, '0')
+  return pad(p.year, 4) + pad(p.month + 1, 2) + pad(p.day, 2)
+}
+
+/**
+ * Formats epoch seconds as `9pm` or `3:40pm`, with the weekday in front
+ * (`Thu 9pm`) when the time falls on a different day than `nowMs`.
+ */
+export function clock(epochSeconds: number, nowMs: number, zone: Zone): string {
+  const ms = Math.trunc(epochSeconds) * 1000
+  const p = parts(ms, zone)
+  const hour = p.hour % 12 === 0 ? 12 : p.hour % 12
+  const minute = p.minute === 0 ? '' : ':' + String(p.minute).padStart(2, '0')
+  const text = `${hour}${minute}${p.hour < 12 ? 'am' : 'pm'}`
+  return dateKey(ms, zone) === dateKey(nowMs, zone) ? text : `${WEEKDAYS[p.weekday]} ${text}`
+}
+
+/** Formats milliseconds as `1h5m`, `12m`, or `40s`. */
+export function duration(ms: number): string {
+  const sec = Math.trunc(ms / 1000)
+  const h = Math.trunc(sec / 3600)
+  const m = Math.trunc((sec % 3600) / 60)
+  if (h > 0) return `${h}h${m}m`
+  if (m > 0) return `${m}m`
+  return `${sec}s`
+}

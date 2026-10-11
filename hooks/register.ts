@@ -1,0 +1,184 @@
+import type { EngineInterface, Register } from 'claude-code'
+
+import { bandTree, type BandElements } from '../src/band.ts'
+import { defaultConfig, parseConfig } from '../src/config.ts'
+import { branchIn, findGitDir, type GitFs } from '../src/gitinfo.ts'
+import {
+  SNAPSHOT_KEY,
+  chooseSnapshot,
+  configDirFrom,
+  renderLive,
+  toPayload,
+} from '../src/live.ts'
+import { MAX_FILE_BYTES, isValidSession, parseRun, progressPath, type Run } from '../src/progress.ts'
+import type { Line } from '../src/render.ts'
+import { dateKey } from '../src/timefmt.ts'
+
+// How often the line refreshes with nothing else to prompt it: the duration
+// ticks, and a progress file another process writes can change.
+const REFRESH_MS = 15_000
+const MAX_CONFIG_BYTES = 64 * 1024
+const MAX_SNAPSHOT_BYTES = 4096
+
+// Module state starts over on a reload; the first refresh refills it.
+let line: Line = []
+let effort: string | undefined
+let running: Promise<void> | null = null
+let again = false
+
+// Every call on `$` stays in this file: the engine follows `$` only into
+// functions declared here, never across an import.
+
+/** Reads a small regular file's text, or null when it is missing, too big, or unreadable. */
+async function readSmall($: EngineInterface, path: string, maxBytes: number): Promise<string | null> {
+  try {
+    const stat = await $.fs.stat(path)
+    if (stat.kind !== 'file' || stat.size > maxBytes) return null
+    return await $.fs.read(path)
+  } catch {
+    return null
+  }
+}
+
+async function kindOf($: EngineInterface, path: string): Promise<'file' | 'dir' | 'other' | null> {
+  try {
+    return (await $.fs.stat(path)).kind
+  } catch {
+    return null
+  }
+}
+
+async function readText($: EngineInterface, path: string): Promise<string | null> {
+  try {
+    return await $.fs.read(path)
+  } catch {
+    return null
+  }
+}
+
+/** The repository's progress run for this session, or the shared run. */
+async function loadProgress($: EngineInterface, gitDir: string, session: string): Promise<Run | null> {
+  if (gitDir === '') return null
+  for (const id of isValidSession(session) ? [session, ''] : ['']) {
+    const text = await readSmall($, progressPath(gitDir, id), MAX_FILE_BYTES)
+    const run = text === null ? null : parseRun(text)
+    if (run) return run
+  }
+  return null
+}
+
+/** Asks the session for its figures and renders the line. */
+async function liveLine($: EngineInterface): Promise<Line> {
+  const [usage, modelId, cwd, root, sessionId, nowMs, settings] = await Promise.all([
+    $.session.usage(),
+    $.session.model(),
+    $.session.cwd(),
+    $.session.root(),
+    $.session.id(),
+    $.clock.now(),
+    $.settings.read(),
+  ])
+  const dir = configDirFrom({
+    claudeConfigDir: await $.env.get('CLAUDE_CONFIG_DIR'),
+    userProfile: await $.env.get('USERPROFILE'),
+    home: await $.env.get('HOME'),
+  })
+  const payload = toPayload({ usage, modelId, cwd, root, sessionId, nowMs, settings, effort })
+
+  const fs: GitFs = { kind: path => kindOf($, path), read: path => readText($, path) }
+  const [configText, goSnapshot, stored, gitDir] = await Promise.all([
+    readSmall($, `${dir}/paceline.json`, MAX_CONFIG_BYTES),
+    readSmall($, `${dir}/paceline-day.json`, MAX_SNAPSHOT_BYTES),
+    $.store.get(SNAPSHOT_KEY),
+    findGitDir(fs, cwd),
+  ])
+  const [branch, run] = await Promise.all([branchIn(fs, gitDir), loadProgress($, gitDir, sessionId)])
+
+  const config = configText === null ? defaultConfig() : parseConfig(configText)
+  const snapshot = chooseSnapshot(goSnapshot, stored, dateKey(nowMs, 'local'), payload.rateLimits?.sevenDay)
+  const result = renderLive(payload, config, snapshot, branch, run, nowMs)
+  if (result.save) await $.store.set(SNAPSHOT_KEY, result.save)
+  return result.line
+}
+
+/**
+ * Re-reads the session's figures and redraws the band. One refresh runs at a
+ * time; a request that arrives during one runs once more after it, so the
+ * line always ends on the latest figures.
+ */
+function refresh($: EngineInterface): Promise<void> {
+  if (running) {
+    again = true
+    return running
+  }
+  running = refreshLoop($)
+  return running
+}
+
+async function refreshLoop($: EngineInterface): Promise<void> {
+  do {
+    again = false
+    try {
+      line = await liveLine($)
+      $.ui.invalidate('ui.render')
+    } catch (err) {
+      // Keep the last good line: a failed read must never blank it.
+      $.ui.log(`paceline: refresh failed: ${String(err)}`, { to: 'debug' })
+    }
+  } while (again)
+  running = null
+}
+
+function noteEffort(level: string | undefined): void {
+  if (level) effort = level
+}
+
+// The classic and tool.call hooks below only watch, so each `.catch` lets the
+// event go on if the hook fails: `next(e)` runs what is beneath it, or replays
+// the result when the hook had already called `next`.
+export const register: Register = on => {
+  on('session.start', async ($, e, next) => {
+    await refresh($)
+    $.clock.every(REFRESH_MS, () => refresh($))
+    return next(e)
+  })
+
+  // Usage moved: a turn ended, or a rate-limit window moved a whole point.
+  on('session.measure', ($, e, next) => {
+    void refresh($)
+    return next(e)
+  })
+
+  // /clear, /resume, and /branch start the session's figures over.
+  on('classic.SessionStart', ($, e, next) => {
+    void refresh($)
+    return next(e)
+  }).catch(($, e, next) => next(e))
+
+  // The mods API has no effort reading; these events carry the turn's.
+  on('classic.PostToolUse', ($, e, next) => {
+    noteEffort(e.effort?.level)
+    return next(e)
+  }).catch(($, e, next) => next(e))
+  on('classic.Stop', ($, e, next) => {
+    noteEffort(e.effort?.level)
+    void refresh($)
+    return next(e)
+  }).catch(($, e, next) => next(e))
+
+  // An agent reported progress: redraw the bar now rather than on the timer.
+  on('tool.call', async ($, e, next) => {
+    const result = await next(e)
+    if (String(e.tool).startsWith('mcp__paceline__progress_')) void refresh($)
+    return result
+  }).catch(($, e, next) => next(e))
+
+  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    if (e.props.hasSurvey || line.length === 0) return next(e)
+    const el = $.ui.resolve(e) as unknown as BandElements
+    const ours = bandTree(line, el, e.surface)
+    // Keep whatever the mods after this one draw in the band, under the line.
+    const theirs = await next(e)
+    return el.Box({ flexDirection: 'column', children: [ours, theirs] })
+  })
+}
