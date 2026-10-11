@@ -132,6 +132,8 @@ claude plugin test .       # every *.test.ts file
 tsc -p .                   # type check, once a session has loaded the mod and laid its types
 ```
 
+[`docs/notes.md`](docs/notes.md) records what the mods platform can and can't do, where each figure comes from, and ideas not built yet. `.claude/CLAUDE.md` holds the working rules for agents.
+
 `test/fixtures/` holds the Go paceline's `parity.json` and `progress.json` as TypeScript modules. The parity tests prove the mod renders exactly the bytes the Go paceline prints for every case. When the Go fixtures change, copy them again rather than editing the cases by hand.
 
 ## License
