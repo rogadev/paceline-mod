@@ -44,12 +44,13 @@ The Go paceline reads the status line JSON on stdin. The mod rebuilds the same p
 
 ## The limit forecast
 
-The line shows one of `s` and `w`, chosen in `src/forecast.ts`. The user asked for it on 2026-10-11: determine which limit runs out first and show just that one, to cut noise, keeping in mind 9-to-5 users, agents running 24/7, API-key users, and Max-plan users staying under their limits.
+The line warns about at most one of `s` and `w`, chosen in `src/forecast.ts`. The user asked for it on 2026-10-11: determine which limit runs out first and show only that one, to cut noise, keeping in mind 9-to-5 users, agents running 24/7, API-key users, and Max-plan users staying under their limits.
 
 - **Activity profile.** Each refresh marks the local hour as seen, and as active if either limit's usage rose since the last reading (a drop is a reset, not use). Per hour of the day, the chance of working is `(active days + 0.25) / (completed days + 0.5)`: 0.5 with no history, about 0.97 or 0.03 after a week of steady use. Weekdays and weekends share one profile in v1.
 - **Rates.** Week: points spent today (from the day snapshot) over today's active hours, once there are 2 or more; else the week's points over the week's active hours; else the week's points over half its elapsed hours (at least 3). Session: its points over the active hours in its five-hour window, or its elapsed time when none are recorded.
 - **Projection.** Step 15 minutes at a time from now to each reset, burning `rate × chance`. The next hour counts as certain while usage rose in the last 20 minutes.
 - **Pick.** The limit that runs out first; if neither does, the one forecast to end its window fuller, keeping the previous pick when the two are within 5 points.
+- **Display.** The pick shows only when it has an out time, that is, when it runs out before it resets: `w→Tue 10pm` or `s→3:45pm`, with no percentage. A pick without an out time draws nothing. The out time rounds down, to the hour for the week and to the quarter hour for the session, with `floorInDay` in `src/timefmt.ts`, which counts steps from the local start of the day so a half-hour-offset zone keeps its own hours. If the rounded time is already before now, the exact minute shows instead. A week warning is yellow until it's within 24 hours of running out, then red; a session warning is always red. With `"limits": "both"` there is no pick, and the line shows both percentages after the today bar.
 - **Gaps.** Usage on another device while the mod isn't running lands in the hour of the next reading. Time zones with half-hour offsets bucket hours on UTC hour boundaries. API-key users have no rate limits, so there's nothing to forecast; a cost forecast for them is a separate idea.
 
 ## Ideas not built yet

@@ -1,6 +1,7 @@
 /**
  * Forecasts which usage limit runs out first, the five-hour session or the
- * week, so the line can show just that one.
+ * week. The compact line turns the pick into a warning only when it runs out
+ * before it resets; otherwise it shows neither limit.
  *
  * The model:
  *
