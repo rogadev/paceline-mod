@@ -77,9 +77,9 @@ function withSession(): Config {
   return c
 }
 
-// Where the warning lands: after the project, model, effort, today, the week,
-// and its days left.
-const WARNING = 6
+// Where the week's days left land: after the project, model, effort, today,
+// and the week figure.
+const DAYS = 5
 
 describe('compact layout', () => {
   test('project, model, and effort lead, then today and the week', () => {
@@ -110,47 +110,50 @@ describe('compact layout', () => {
     )
   })
 
-  test('week warning', () => {
-    const warning = (outAt: string, config = defaultConfig()) =>
-      compact({}, config, { show: 'week', outAt: sec(outAt) })[WARNING]
-    // More than a day away: yellow, rounded down to the hour.
-    expect(warning('2026-10-08T21:40:00Z')).toEqual([{ text: 'w\u2192Thu 9pm', tone: 'yellow' }])
-    expect(warning('2026-10-08T12:30:00Z')).toEqual([{ text: 'w\u2192Thu 12pm', tone: 'yellow' }])
-    // Exactly a day away is within a day.
-    expect(warning('2026-10-08T12:00:00Z')).toEqual([{ text: 'w\u2192Thu 12pm', tone: 'red' }])
-    expect(warning('2026-10-08T09:59:00Z')).toEqual([{ text: 'w\u2192Thu 9am', tone: 'red' }])
-    expect(warning('2026-10-07T18:20:00Z')).toEqual([{ text: 'w\u21926pm', tone: 'red' }])
+  test('a week that runs out early says when in place of the days left', () => {
+    const out = (outAt: string, config = defaultConfig()) =>
+      compact({}, config, { show: 'week', outAt: sec(outAt) })[DAYS]
+    // More than a day away: the weekday alone, in yellow.
+    expect(out('2026-10-08T21:40:00Z')).toEqual([{ text: 'out ~Thu', tone: 'yellow' }])
+    expect(out('2026-10-08T12:30:00Z')).toEqual([{ text: 'out ~Thu', tone: 'yellow' }])
+    // Exactly a day away is within a day: the time, rounded down to the hour, in red.
+    expect(out('2026-10-08T12:00:00Z')).toEqual([{ text: 'out ~Thu 12pm', tone: 'red' }])
+    expect(out('2026-10-08T09:59:00Z')).toEqual([{ text: 'out ~Thu 9am', tone: 'red' }])
+    expect(out('2026-10-07T18:20:00Z')).toEqual([{ text: 'out ~6pm', tone: 'red' }])
     const verbose = defaultConfig()
     verbose.verbose = true
-    expect(warning('2026-10-08T21:40:00Z', verbose)).toEqual([{ text: 'week\u2192Thu 9pm', tone: 'yellow' }])
+    expect(out('2026-10-08T21:40:00Z', verbose)).toEqual([{ text: 'out ~Thu', tone: 'yellow' }])
     expect(text(compact({}, defaultConfig(), { show: 'week', outAt: sec('2026-10-08T21:40:00Z') }))).toBe(
-      [...HEAD, TODAY, ...WEEK, 'w\u2192Thu 9pm', '59m'].join(DOT),
+      [...HEAD, TODAY, 'w 46/100', 'out ~Thu', '59m'].join(DOT),
     )
   })
 
-  test('session warning', () => {
-    const warning = (outAt: string, config = withSession()) =>
-      compact({ session: 80 }, config, { show: 'session', outAt: sec(outAt) })[WARNING]
-    expect(warning('2026-10-07T13:59:00Z')).toEqual([{ text: 's\u21921:45pm', tone: 'red' }])
-    expect(warning('2026-10-07T13:00:00Z')).toEqual([{ text: 's\u21921pm', tone: 'red' }])
-    expect(warning('2026-10-07T12:14:59Z')).toEqual([{ text: 's\u219212pm', tone: 'red' }])
-    const verbose = withSession()
-    verbose.verbose = true
-    expect(warning('2026-10-07T13:59:00Z', verbose)).toEqual([{ text: 'session\u21921:45pm', tone: 'red' }])
+  test('a session that runs out says when in place of its reset time', () => {
+    const line = (outAt: string) => compact({ session: 80 }, withSession(), { show: 'session', outAt: sec(outAt) })
+    expect(line('2026-10-07T13:59:00Z').slice(3, 5)).toEqual([
+      [{ text: 's 80%', tone: 'yellow' }],
+      [{ text: 'out ~1:45pm', tone: 'red' }],
+    ])
+    expect(line('2026-10-07T13:00:00Z')[4]).toEqual([{ text: 'out ~1pm', tone: 'red' }])
+    expect(line('2026-10-07T12:14:59Z')[4]).toEqual([{ text: 'out ~12pm', tone: 'red' }])
+    // The week keeps its days left.
+    expect(text(line('2026-10-07T13:59:00Z'))).toBe(
+      [...HEAD, 's 80%', 'out ~1:45pm', TODAY, ...WEEK, '59m'].join(DOT),
+    )
   })
 
   test('an out time inside the current step shows the exact minute, not a time already passed', () => {
-    const warningAt = (now: string, pick: LimitPick) =>
-      compact({ session: 80 }, withSession(), pick, { nowMs: Date.parse(now) })[WARNING]
-    expect(warningAt('2026-10-07T13:52:00Z', { show: 'session', outAt: sec('2026-10-07T13:58:00Z') })).toEqual([
-      { text: 's\u21921:58pm', tone: 'red' },
+    const outAt = (now: string, pick: LimitPick) =>
+      compact({ session: 80 }, withSession(), pick, { nowMs: Date.parse(now) }).find(s => s[0].text.startsWith('out ~'))
+    expect(outAt('2026-10-07T13:52:00Z', { show: 'session', outAt: sec('2026-10-07T13:58:00Z') })).toEqual([
+      { text: 'out ~1:58pm', tone: 'red' },
     ])
-    expect(warningAt('2026-10-07T12:20:00Z', { show: 'week', outAt: sec('2026-10-07T12:50:00Z') })).toEqual([
-      { text: 'w\u219212:50pm', tone: 'red' },
+    expect(outAt('2026-10-07T12:20:00Z', { show: 'week', outAt: sec('2026-10-07T12:50:00Z') })).toEqual([
+      { text: 'out ~12:50pm', tone: 'red' },
     ])
     // Rounding down to exactly now is not in the past.
-    expect(warningAt('2026-10-07T13:45:00Z', { show: 'session', outAt: sec('2026-10-07T13:58:00Z') })).toEqual([
-      { text: 's\u21921:45pm', tone: 'red' },
+    expect(outAt('2026-10-07T13:45:00Z', { show: 'session', outAt: sec('2026-10-07T13:58:00Z') })).toEqual([
+      { text: 'out ~1:45pm', tone: 'red' },
     ])
   })
 
@@ -184,13 +187,14 @@ describe('compact layout', () => {
     expect(toAnsi(render(payload(), { ...ctx, limits: pick }))).toBe(toAnsi(render(payload(), ctx)))
   })
 
-  test('no warning without an out time', () => {
-    const want = [...HEAD, TODAY, ...WEEK, '59m'].join(DOT)
-    expect(text(compact({ session: 80 }, withSession(), { show: 'session' }))).toBe(want)
-    expect(text(compact({}, defaultConfig(), { show: 'week' }))).toBe(want)
+  test('a pick without an out time changes nothing', () => {
+    expect(text(compact({ session: 80 }, withSession(), { show: 'session' }))).toBe(
+      [...HEAD, 's 80% (resets 2:30pm)', TODAY, ...WEEK, '59m'].join(DOT),
+    )
+    expect(text(compact({}, defaultConfig(), { show: 'week' }))).toBe([...HEAD, TODAY, ...WEEK, '59m'].join(DOT))
   })
 
-  test('a limit turned off in the config never warns', () => {
+  test('a limit turned off in the config never says when it runs out', () => {
     const config = defaultConfig()
     config.segments.week = false
     const line = compact({}, config, { show: 'week', outAt: sec('2026-10-08T21:40:00Z') })

@@ -3,14 +3,14 @@
 A Claude Code mod that paces your usage limits and shows, at a glance, where every session stands, in a line above the prompt.
 
 ```
-paceline (dev) · Opus 5.5 · high · Today: ▕██████░░░░░░░░│ 8/14 · w 43/100 · 4d left · w→Tue 10pm · 59m
+paceline (dev) · Opus 5.5 · high · Today: ▕██████░░░░░░░░│ 8/14 · w 43/100 · 4d left · 59m
 ```
 
-`Today:` is today's budget as a bar that drains as you use it: full cells are what's left, and the `│` marker is an even day's share of the week. `8/14` is the weekly points you've spent of today's 14. `w 43/100` is the week so far, with the days until it resets. `w→Tue 10pm` is a warning: at your current pace, your weekly limit is forecast to run out Tuesday at 10pm, before it resets. It shows only when the week is on track to run out; on a normal day, it doesn't. See [Run-out warnings](#run-out-warnings).
+`Today:` is today's budget as a bar that drains as you use it: full cells are what's left, and the `│` marker is an even day's share of the week. `8/14` is the weekly points you've spent of today's 14. `w 43/100` is the week so far, and `4d left` is the days until it resets. If your current pace would use up the week before then, `4d left` turns into a warning, `out ~Tue`: the week is forecast to run out on Tuesday. On a normal day, you never see it. See [Run-out warnings](#run-out-warnings).
 
 Your weekly limit resets on a fixed schedule, but Claude Code only tells you how much is left, not whether that's a lot or a little for the days remaining. paceline divides what's left by the days until the reset and gives you **today's budget**, then counts up how much of it you've used as you work. A light week gives you a big budget; a heavy one, a small budget.
 
-This is the mod version of [paceline](https://github.com/rogadev/paceline), the Go status line. Its segments come from the same math, checked against the same test fixtures, but it installs as a plugin, draws in the band above the prompt, puts the project first, and adds a warning when a usage limit is about to run out.
+This is the mod version of [paceline](https://github.com/rogadev/paceline), the Go status line. Its segments come from the same math, checked against the same test fixtures, but it installs as a plugin, draws in the band above the prompt, puts the project first, and says when a usage limit is about to run out.
 
 ## Install
 
@@ -37,11 +37,9 @@ To hide the line for a while, click the `[-]` at the right end of the band, or p
 | Model | `Opus 5.5` | The model. |
 | Effort | `high` | The effort level, only when it's above `low` or `medium`. Verbose: `high effort`. |
 | Fast mode | `fast mode` | Only while fast mode is on. |
-| Session | `s 4%` | Off by default; turn it on with `segments.session`. How much of the five-hour limit you've used, with its reset time once less than 30% is left. |
+| Session | `s 4%` | Off by default; turn it on with `segments.session`. How much of the five-hour limit you've used, with its reset time once less than 30% is left, or `out ~3:45pm` when it's forecast to run out first. |
 | Today | `Today: ▕██████░░░░░░░░│ 8/14` | Today's budget as a bar, one cell per weekly point, then the points spent of the budget. See [Today's bar](#todays-bar). |
-| Week | `w 43/100 · 4d left` | How much of the weekly limit you've used, then the days until it resets, or `last day`. From three days out, the figure turns bold. Verbose: `week 43/100`. |
-| Week warning | `w→Tue 10pm` | Only when the weekly limit is forecast to run out before it resets, and when, to the hour. Yellow while that's more than a day away, red within a day. Verbose: `week→Tue 10pm`. |
-| Session warning | `s→3:45pm` | Only with the session segment on, and only when the five-hour session is forecast to run out before it resets, and when, to the quarter hour. Always red. Verbose: `session→3:45pm`. |
+| Week | `w 43/100 · 4d left` | How much of the weekly limit you've used, then the days until it resets, or `last day`. When the week is forecast to run out first, `out ~Tue` replaces the days left. From three days out, the figure turns bold. Verbose: `week 43/100`. |
 | Context | `ctx 72%` | Only when the context window is 70% or more full. |
 | Progress | `loop ▰▰▰▰▱ #44 3/5` | Only while an agent reports a long job's progress. See [Progress bar](#progress-bar). |
 | Duration | `16m` | Session wall-clock time. Always last. |
@@ -64,19 +62,19 @@ The bar has one cell per weekly point, against a `│` marker at the even daily 
 
 Your session and weekly limits are separate, and usually neither is close to stopping you. paceline forecasts both and warns you only when one is on track to run out:
 
-- **A limit that runs out before it resets shows as a warning.** The arrow means "forecast to run out at": `w→Tue 10pm` says your week runs out Tuesday at 10pm, and `s→3:45pm` says your session runs out at 3:45pm. It's not the reset time. If both are forecast to run out, the sooner one shows.
-- **The time rounds down**, to the hour for the week and to the quarter hour for the session, so the warning never promises more time than the forecast gives. If rounding down would give a time that's already past, the exact minute shows instead.
-- **Otherwise, no warning shows.** A limit that lasts until it resets needs no warning.
-- **A warning needs its segment on.** The session segment is off by default, so the session warning shows only once you turn it on. While the forecast runs, the session's percentage stays hidden, since the warning covers it.
+- **A limit that runs out before it resets says when.** The week's `4d left` becomes `out ~Tue`, in yellow, while that's more than a day away, then the time, `out ~9pm`, in red, within a day. The session's reset time becomes `out ~3:45pm`, always in red. The `~` marks an estimate, the same as today's `out ~4pm` on the last day. If both are forecast to run out, only the sooner one shows.
+- **The time rounds down**, to the hour for the week and to the quarter hour for the session, so it never promises more time than the forecast gives. If rounding down would give a time that's already past, the exact minute shows instead.
+- **Otherwise, nothing changes.** A limit that lasts until it resets shows its days left or reset time as usual.
+- **A warning needs its segment on.** The session segment is off by default, so a session warning shows only once you turn it on.
 
 The forecast learns when you work. Each refresh notes which hours of the day your usage goes up, over the last 14 days, so a 9-to-5 user's nights count for little and an agent running around the clock counts every hour. The weekly burn rate is today's average per hour of work, falling back to the week's average early in the day; the session uses its own five-hour window. Until a few days are recorded, every hour counts as an even chance of working.
 
-If you use an API key instead of a subscription, Claude Code reports no rate limits, so neither the bar, the week, nor a warning shows. To skip the forecast, set `"limits": "both"` in [`paceline.json`](#configuration): no warning shows, and a session segment you turned on shows its percentage before today, as in the Go line.
+If you use an API key instead of a subscription, Claude Code reports no rate limits, so neither the bar, the week, nor a warning shows. To skip the forecast, set `"limits": "both"` in [`paceline.json`](#configuration): no warning shows, as in the Go line.
 
 ### How it differs from the Go status line
 
 - **It draws above the prompt**, in the band mods share, not in the status line under it. A plugin can't set your status line, so the two can run side by side.
-- **A compact layout.** It puts the project ahead of the model, shows effort as the bare level, `high`, instead of `high effort`, and adds a [run-out warning](#run-out-warnings) after the week. Today and the week are the Go line's segments, byte for byte.
+- **A compact layout.** It puts the project ahead of the model, shows effort as the bare level, `high`, instead of `high effort`, and says when a limit [runs out early](#run-out-warnings). Otherwise, today and the week are the Go line's segments, byte for byte.
 - **No prompt-cache warning yet.** The mods API doesn't report when the prompt cache expires, so the `cache cold` segment never shows.
 - **Effort** comes from the latest turn. Until the first tool call or reply in a session, it falls back to the `effortLevel` in your settings.
 - **Fast mode** is read from the `fastMode` key in your settings, which may not match every way fast mode can be turned on.
@@ -102,8 +100,8 @@ paceline reads the same `~/.claude/paceline.json` (or `$CLAUDE_CONFIG_DIR/paceli
 - `countDirection`: `"up"` or `"down"` for `session`, `week`, and `today`, each on its own. `"down"` counts what's left: today reads `6/14 left`, and past the budget, how far over (`3 over/14`); the week reads `w 57/100 left`. The bar is the same either way.
 - `quietEfforts`: effort levels that don't need a label.
 - `projectSlots`: pin a project to a color slot from 0 to 11.
-- `verbose`: spell out the labels (`week 43/100`, `week→`, `high effort`) instead of one letter or a bare level (`w 43/100`, `w→`, `high`).
-- `limits`: `"auto"`, the default, warns of a limit forecast to run out before it resets; `"both"` skips the forecast and shows a session segment you turned on as a percentage. The Go paceline ignores this key.
+- `verbose`: spell out the labels (`week 43/100`, `high effort`) instead of one letter or a bare level (`w 43/100`, `high`).
+- `limits`: `"auto"`, the default, warns of a limit forecast to run out before it resets; `"both"` skips the forecast, so the days left and the session's reset time never change to `out ~`. The Go paceline ignores this key.
 
 The mod reads the file on every refresh, so a change shows within 15 seconds. A key with the wrong type or range is ignored, and a file that isn't valid JSON gives the defaults.
 

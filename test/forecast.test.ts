@@ -184,14 +184,14 @@ describe('the line with a forecast', () => {
   const base = { nowMs: now, zone: 'utc' as const, config, compact: true }
   const week = 'w 60/100 \u00b7 3d left'
 
-  test('the compact layout drops the session and warns of the picked limit after the week', () => {
+  test('the compact layout says when the picked limit runs out, in place of the days left', () => {
     const line = toAnsi(render(payload, { ...base, limits: { show: 'week', outAt: sec('2026-10-08T21:00:00Z') } }), true)
-    expect(line).toBe(`site \u00b7 Opus 5.5 \u00b7 ${week} \u00b7 w\u2192Thu 9pm`)
+    expect(line).toBe('site \u00b7 Opus 5.5 \u00b7 s 20% \u00b7 w 60/100 \u00b7 out ~Thu')
   })
 
-  test('a pick that does not run out adds no warning', () => {
+  test('a pick that does not run out changes nothing', () => {
     const line = toAnsi(render(payload, { ...base, limits: { show: 'session' } }), true)
-    expect(line).toBe(`site \u00b7 Opus 5.5 \u00b7 ${week}`)
+    expect(line).toBe(`site \u00b7 Opus 5.5 \u00b7 s 20% \u00b7 ${week}`)
   })
 
   test('without a pick the session shows, in the Go order', () => {

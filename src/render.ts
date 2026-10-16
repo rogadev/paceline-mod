@@ -23,7 +23,7 @@ import {
   type Status,
 } from './progress.ts'
 import { clean } from './sanitize.ts'
-import { clock, duration, floorInDay, startOfDay, type Zone } from './timefmt.ts'
+import { clock, duration, floorInDay, startOfDay, weekday, type Zone } from './timefmt.ts'
 
 const MIDDLE_DOT = '\u00b7'
 const CELL_FULL = '\u25b0'
@@ -85,16 +85,15 @@ export type RenderContext = {
   progress?: (dir: string) => Run | null
   /**
    * Draws the mod's compact layout: the project ahead of the model, effort as
-   * the bare level, and, after the week, a warning when the forecast says a
-   * limit runs out before it resets. Absent, the line is the Go paceline's,
-   * byte for byte.
+   * the bare level, and a limit's run-out time when the forecast says it runs
+   * out before it resets. Absent, the line is the Go paceline's, byte for
+   * byte.
    */
   compact?: boolean
   /**
    * Which usage limit the forecast picked. Only the compact layout reads it:
-   * it warns when the pick runs out before it resets, and drops the session
-   * segment, which the warning covers. Absent, the compact layout shows the
-   * session as the Go layout does.
+   * when the pick runs out before it resets, its segment says when ("out
+   * ~Tue") in place of the week's days left or the session's reset time.
    */
   limits?: LimitPick
 }
@@ -115,7 +114,6 @@ type Part =
   | 'session'
   | 'today'
   | 'week'
-  | 'warning'
   | 'context'
   | 'cache'
   | 'progress'
@@ -143,7 +141,6 @@ const COMPACT_ORDER: readonly Part[] = [
   'session',
   'today',
   'week',
-  'warning',
   'context',
   'cache',
   'progress',
@@ -193,10 +190,9 @@ export function render(p: Payload, ctx: RenderContext): Line {
     model: on.model ? present(model(p)) : [],
     effort: on.effort ? present(effort(p, ctx)) : [],
     fastMode: on.fastMode && p.fastMode === true ? [[span('fast mode', 'yellow')]] : [],
-    session: on.session && !pick ? present(session(p, ctx)) : [],
+    session: on.session ? session(p, ctx, runOut(pick, 'session', ctx)) : [],
     today: on.today && r ? [today(r, ctx)] : [],
-    week: on.week && sd?.usedPercentage !== undefined ? week(sd.usedPercentage, r, ctx) : [],
-    warning: pick ? limitWarning(pick, ctx) : [],
+    week: on.week && sd?.usedPercentage !== undefined ? week(sd.usedPercentage, r, ctx, runOut(pick, 'week', ctx)) : [],
     context: on.context ? present(contextWarning(p, ctx)) : [],
     cache: on.cache ? present(cacheWarning(p, ctx)) : [],
     progress: on.progress ? present(progress(p, ctx)) : [],
@@ -240,39 +236,42 @@ function effort(p: Payload, ctx: RenderContext): Segment | null {
 // The five-hour limit. It counts up what's used from 0%, or down what's left
 // from 100% when its countDirection is "down". Color always follows what's
 // left, so either way the segment turns red near the limit. A reading past
-// 100% shows 100% used or 0% left, never more or negative.
-function session(p: Payload, ctx: RenderContext): Segment | null {
+// 100% shows 100% used or 0% left, never more or negative. When the session
+// runs out before it resets, `out` follows in place of the reset time.
+function session(p: Payload, ctx: RenderContext, out: Span | null): Segment[] {
   const fh = p.rateLimits?.fiveHour
-  if (fh?.usedPercentage === undefined) return null
+  if (fh?.usedPercentage === undefined) return []
   const used = round(fh.usedPercentage)
   const left = Math.max(0, 100 - used)
   const shown = ctx.config.countDown.session
     ? `${left}%${label(ctx, '', ' left')}`
     : `${Math.min(Math.max(used, 0), 100)}%${label(ctx, '', ' used')}`
+  const name = label(ctx, 's', 'session')
+  if (out) return [[headroom(ctx, left, `${name} ${shown}`)], [out]]
   const when =
     left < ctx.config.thresholds.headroomGreen && fh.resetsAt !== undefined
       ? ` (resets ${clock(fh.resetsAt, ctx.nowMs, ctx.zone)})`
       : ''
-  return [headroom(ctx, left, `${label(ctx, 's', 'session')} ${shown}${when}`)]
+  return [[headroom(ctx, left, `${name} ${shown}${when}`)]]
 }
 
-// The compact layout's limit: nothing until the forecast says the picked limit
-// runs out before it resets, then the label, an arrow, and when ("Tue 10pm").
-// The time rounds down, so the warning never promises more time than the
+// When the forecast says `limit` runs out before it resets, when: the weekday
+// alone ("out ~Tue") in yellow while that is more than a day away, then the
+// time ("out ~9pm") in red. A session is always within five hours, so it
+// always shows the time. The time rounds down, to the hour for the week and
+// the quarter hour for the session, so it never promises more time than the
 // forecast gives, unless rounding would land before now: then it shows the
-// exact minute instead of a time already passed. A week turns from yellow to
-// red within a day of running out; a session is always within five hours, so
-// always red.
-function limitWarning(pick: LimitPick, ctx: RenderContext): Segment[] {
-  if (pick.outAt === undefined || !ctx.config.segments[pick.show]) return []
+// exact minute instead of a time already passed. The "~" marks an estimate,
+// as on today's last-day "out ~4pm".
+function runOut(pick: LimitPick | undefined, limit: LimitPick['show'], ctx: RenderContext): Span | null {
+  if (pick?.show !== limit || pick.outAt === undefined) return null
   const outMs = pick.outAt * 1000
-  const isSession = pick.show === 'session'
-  const name = isSession ? label(ctx, 's', 'session') : label(ctx, 'w', 'week')
+  const isSession = limit === 'session'
+  if (!isSession && outMs - ctx.nowMs > DAY_MS) return span(`out ~${weekday(outMs, ctx.zone)}`, 'yellow')
   const step = isSession ? SESSION_OUT_STEP_MS : WEEK_OUT_STEP_MS
   const rounded = floorInDay(outMs, step, startOfDay(outMs, ctx.zone))
   const at = rounded < ctx.nowMs ? outMs : rounded
-  const tone: Tone = isSession || outMs - ctx.nowMs <= DAY_MS ? 'red' : 'yellow'
-  return [[span(`${name}${RIGHT_ARROW}${clock(at / 1000, ctx.nowMs, ctx.zone)}`, tone)]]
+  return span(`out ~${clock(at / 1000, ctx.nowMs, ctx.zone)}`, 'red')
 }
 
 // Today's budget, from the weekly limit, or null without a reset time or once
@@ -360,17 +359,18 @@ function todayBar(budget: number, spent: number): Span[] {
   return out
 }
 
-// The week as "w 58/100", then the days left until the reset. From three days
-// out the week figure turns bold: late in the week a single day absorbs all
-// the slack or debt, so today's budget can swing, and the week is the steadier
-// reference.
-function week(usedPct: number, r: Budget | null, ctx: RenderContext): Segment[] {
+// The week as "w 58/100", then the days left until the reset, or `out` when
+// the week runs out before it resets. From three days out the week figure
+// turns bold: late in the week a single day absorbs all the slack or debt, so
+// today's budget can swing, and the week is the steadier reference.
+function week(usedPct: number, r: Budget | null, ctx: RenderContext, out: Span | null): Segment[] {
   const used = Math.min(Math.max(round(usedPct), 0), 100)
   const left = 100 - used
   const name = label(ctx, 'w', 'week')
   const figure = headroom(ctx, left, ctx.config.countDown.week ? `${name} ${left}/100 left` : `${name} ${used}/100`)
+  if (r !== null && round(r.daysLeft) <= 3) figure.bold = true
+  if (out) return [[figure], [out]]
   if (r === null) return [[figure]]
-  if (round(r.daysLeft) <= 3) figure.bold = true
   return [[figure], [span(r.lastDay ? 'last day' : `${round(r.daysLeft)}d left`, 'dim')]]
 }
 

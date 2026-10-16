@@ -88,6 +88,11 @@ export function clock(epochSeconds: number, nowMs: number, zone: Zone): string {
   return dateKey(ms, zone) === dateKey(nowMs, zone) ? text : `${WEEKDAYS[p.weekday]} ${text}`
 }
 
+/** The short weekday name (`Tue`) of the day that holds `ms`. */
+export function weekday(ms: number, zone: Zone): string {
+  return WEEKDAYS[parts(ms, zone).weekday]
+}
+
 /** Formats milliseconds as `1h5m`, `12m`, or `40s`. */
 export function duration(ms: number): string {
   const sec = Math.trunc(ms / 1000)

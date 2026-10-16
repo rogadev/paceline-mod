@@ -186,7 +186,7 @@ describe('live adapter', () => {
     expect(toAnsi(line, true).startsWith('techcentral (dev) \u00b7 Opus 5.5 \u00b7 high \u00b7 s 16% \u00b7 Today: ')).toBe(true)
   })
 
-  test('a week forecast to run out warns right after the week', () => {
+  test('a week forecast to run out says when, after the week figure', () => {
     // Agents running around the clock: every hour active for a week, 14.4
     // points spent today, 40 points left, and two days to the reset.
     const now = Date.parse('2026-10-07T12:00:00Z')
@@ -210,10 +210,9 @@ describe('live adapter', () => {
     const { line, pick } = renderLive(p, defaultConfig(), { ...state, nowMs: now, snapshot, activity })
     expect(pick?.show).toBe('week')
     expect(pick?.outAt).toBeDefined()
-    const days = line.findIndex(segment => segment[0].text.endsWith('d left'))
-    expect(line[days - 1][0].text).toBe('w 60/100')
-    expect(line[days + 1].length).toBe(1)
-    expect(line[days + 1][0].text.startsWith('w\u2192')).toBe(true)
+    const figure = line.findIndex(segment => segment[0].text === 'w 60/100')
+    expect(line[figure + 1].length).toBe(1)
+    expect(line[figure + 1][0].text.startsWith('out ~')).toBe(true)
   })
 
   test("the Go paceline's anchor wins only for the same day and week", () => {
