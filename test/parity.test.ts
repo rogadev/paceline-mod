@@ -17,11 +17,14 @@ const BRANCHES: Record<string, string> = {
 }
 
 // The fixtures record the countdown display, so every usage segment counts
-// down here, as it does in the Go parity test.
+// down here, as it does in the Go parity test. The fixtures also predate the
+// session segment being off by default, and none of their configs set it, so
+// it stays on to keep the session format pinned.
 describe('parity with the Go paceline', () => {
   for (const c of PARITY_CASES) {
     test(c.name, () => {
       const config = mergeConfig(c.config)
+      config.segments.session = true
       config.countDown = { session: true, week: true, today: true }
       let snap: Snapshot | null = null
       c.steps.forEach((step, i) => {

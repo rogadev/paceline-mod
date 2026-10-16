@@ -59,7 +59,7 @@ export function defaultConfig(): Config {
       fastMode: true,
       project: true,
       branch: true,
-      session: true,
+      session: false,
       week: true,
       today: true,
       context: true,

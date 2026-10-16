@@ -10,7 +10,7 @@
 
 import { headroomLevel, projectSlot, slotColor, type RGB } from './color.ts'
 import type { Config } from './config.ts'
-import { computeBudget, type Budget, type Snapshot } from './pace.ts'
+import { computeBudget, EVEN_PACE, type Budget, type Snapshot } from './pace.ts'
 import type { Payload } from './payload.ts'
 import {
   activeIndex,
@@ -33,8 +33,17 @@ const ELLIPSIS = '\u2026'
 const RIGHT_ARROW = '\u2192'
 // Keeps a long run from pushing the rest of the line off-screen.
 const MAX_CELLS = 20
-/** Cells in the compact layout's today bar; each is a fifth of the budget. */
-const BAR_CELLS = 5
+// Today's bar: budget left (or overage), budget spent, the part of the daily
+// base below a smaller budget, the base marker, and the bar's ends.
+const BAR_FULL = '\u2588'
+const BAR_DRAINED = '\u2591'
+const BAR_BELOW = '\u2592'
+const BAR_MARKER = '\u2502'
+const BAR_LEFT = '\u2595'
+const BAR_RIGHT = '\u258f'
+// Twice the daily base, so a big carryover late in the week doesn't push the
+// rest of the line off-screen.
+const MAX_BAR_CELLS = 28
 const MINUTE_MS = 60 * 1000
 const HOUR_MS = 60 * MINUTE_MS
 const DAY_MS = 24 * HOUR_MS
@@ -49,10 +58,17 @@ const WEEK_OUT_STEP_MS = HOUR_MS
 /** Windows Terminal's default red with 15% less chroma, easier on the eyes. */
 export const MUTED_RED: RGB = [185, 47, 47]
 
+/**
+ * A darker, grayer MUTED_RED for the part of the daily base that earlier
+ * overspending took from today's budget: where the day started, not a
+ * warning.
+ */
+const FAINT_RED: RGB = [136, 66, 66]
+
 /** How a span is colored. A named tone follows the terminal's own palette. */
 export type Tone = 'plain' | 'cyan' | 'green' | 'yellow' | 'red' | 'dim' | RGB
 
-export type Span = { text: string; tone: Tone }
+export type Span = { text: string; tone: Tone; bold?: boolean }
 export type Segment = Span[]
 export type Line = Segment[]
 
@@ -68,15 +84,17 @@ export type RenderContext = {
   /** The progress run of the repository holding `dir`, or null. */
   progress?: (dir: string) => Run | null
   /**
-   * Draws the mod's compact layout: today as a bar, first, then a limit only
-   * when it is forecast to run out, then the project ahead of the model.
-   * Absent, the line is the Go paceline's, byte for byte.
+   * Draws the mod's compact layout: the project ahead of the model, effort as
+   * the bare level, and, after the week, a warning when the forecast says a
+   * limit runs out before it resets. Absent, the line is the Go paceline's,
+   * byte for byte.
    */
   compact?: boolean
   /**
    * Which usage limit the forecast picked. Only the compact layout reads it:
-   * it warns when the pick runs out before it resets. Absent, the compact
-   * layout shows both limits' percentages, as the Go layout does.
+   * it warns when the pick runs out before it resets, and drops the session
+   * segment, which the warning covers. Absent, the compact layout shows the
+   * session as the Go layout does.
    */
   limits?: LimitPick
 }
@@ -94,8 +112,10 @@ type Part =
   | 'model'
   | 'effort'
   | 'fastMode'
-  | 'limits'
+  | 'session'
   | 'today'
+  | 'week'
+  | 'warning'
   | 'context'
   | 'cache'
   | 'progress'
@@ -106,8 +126,9 @@ const GO_ORDER: readonly Part[] = [
   'effort',
   'fastMode',
   'project',
-  'limits',
+  'session',
   'today',
+  'week',
   'context',
   'cache',
   'progress',
@@ -115,12 +136,14 @@ const GO_ORDER: readonly Part[] = [
 ]
 
 const COMPACT_ORDER: readonly Part[] = [
-  'today',
-  'limits',
   'project',
   'model',
   'effort',
   'fastMode',
+  'session',
+  'today',
+  'week',
+  'warning',
   'context',
   'cache',
   'progress',
@@ -128,6 +151,7 @@ const COMPACT_ORDER: readonly Part[] = [
 ]
 
 const span = (text: string, tone: Tone = 'plain'): Span => ({ text, tone })
+const spaced = (pieces: Span[][]) => pieces.flatMap((piece, i) => (i === 0 ? piece : [span(' '), ...piece]))
 const present = (segment: Segment | null): Segment[] => (segment ? [segment] : [])
 
 /** Rounds halves up, as the Go paceline (and its JavaScript 1.0) does. */
@@ -161,13 +185,18 @@ function headroom(ctx: RenderContext, left: number, text: string): Span {
 /** Returns the line for `p`, in the Go layout unless `ctx.compact` is set. */
 export function render(p: Payload, ctx: RenderContext): Line {
   const on = ctx.config.segments
+  const pick = ctx.compact ? ctx.limits : undefined
+  const sd = p.rateLimits?.sevenDay
+  const r = (on.today || on.week) && sd ? budgetFor(sd, ctx) : null
   const parts: Record<Part, Segment[]> = {
     project: on.project ? present(project(p, ctx)) : [],
     model: on.model ? present(model(p)) : [],
     effort: on.effort ? present(effort(p, ctx)) : [],
     fastMode: on.fastMode && p.fastMode === true ? [[span('fast mode', 'yellow')]] : [],
-    limits: ctx.compact && ctx.limits ? limitWarning(ctx.limits, ctx) : usageLimits(p, ctx),
-    today: on.today ? present(today(p, ctx)) : [],
+    session: on.session && !pick ? present(session(p, ctx)) : [],
+    today: on.today && r ? [today(r, ctx)] : [],
+    week: on.week && sd?.usedPercentage !== undefined ? week(sd.usedPercentage, r, ctx) : [],
+    warning: pick ? limitWarning(pick, ctx) : [],
     context: on.context ? present(contextWarning(p, ctx)) : [],
     cache: on.cache ? present(cacheWarning(p, ctx)) : [],
     progress: on.progress ? present(progress(p, ctx)) : [],
@@ -208,35 +237,23 @@ function effort(p: Payload, ctx: RenderContext): Segment | null {
   return [span(text, 'dim')]
 }
 
-// Usage limits: session, then week. Each counts up what's used from 0%, or
-// down what's left from 100% when its countDirection is "down". Color always
-// follows what's left, so either way the segment turns red near the limit.
-function usageLimits(p: Payload, ctx: RenderContext): Segment[] {
-  const on = ctx.config.segments
-  const usage = (usedPct: number, down: boolean) => {
-    const used = round(usedPct)
-    const left = Math.max(0, 100 - used)
-    const shown = down
-      ? `${left}%${label(ctx, '', ' left')}`
-      : `${Math.min(Math.max(used, 0), 100)}%${label(ctx, '', ' used')}`
-    return { left, shown }
-  }
-  const segments: Segment[] = []
+// The five-hour limit. It counts up what's used from 0%, or down what's left
+// from 100% when its countDirection is "down". Color always follows what's
+// left, so either way the segment turns red near the limit. A reading past
+// 100% shows 100% used or 0% left, never more or negative.
+function session(p: Payload, ctx: RenderContext): Segment | null {
   const fh = p.rateLimits?.fiveHour
-  if (on.session && fh?.usedPercentage !== undefined) {
-    const { left, shown } = usage(fh.usedPercentage, ctx.config.countDown.session)
-    const when =
-      left < ctx.config.thresholds.headroomGreen && fh.resetsAt !== undefined
-        ? ` (resets ${clock(fh.resetsAt, ctx.nowMs, ctx.zone)})`
-        : ''
-    segments.push([headroom(ctx, left, `${label(ctx, 's', 'session')} ${shown}${when}`)])
-  }
-  const sd = p.rateLimits?.sevenDay
-  if (on.week && sd?.usedPercentage !== undefined) {
-    const { left, shown } = usage(sd.usedPercentage, ctx.config.countDown.week)
-    segments.push([headroom(ctx, left, `${label(ctx, 'w', 'week')} ${shown}`)])
-  }
-  return segments
+  if (fh?.usedPercentage === undefined) return null
+  const used = round(fh.usedPercentage)
+  const left = Math.max(0, 100 - used)
+  const shown = ctx.config.countDown.session
+    ? `${left}%${label(ctx, '', ' left')}`
+    : `${Math.min(Math.max(used, 0), 100)}%${label(ctx, '', ' used')}`
+  const when =
+    left < ctx.config.thresholds.headroomGreen && fh.resetsAt !== undefined
+      ? ` (resets ${clock(fh.resetsAt, ctx.nowMs, ctx.zone)})`
+      : ''
+  return [headroom(ctx, left, `${label(ctx, 's', 'session')} ${shown}${when}`)]
 }
 
 // The compact layout's limit: nothing until the forecast says the picked limit
@@ -258,60 +275,103 @@ function limitWarning(pick: LimitPick, ctx: RenderContext): Segment[] {
   return [[span(`${name}${RIGHT_ARROW}${clock(at / 1000, ctx.nowMs, ctx.zone)}`, tone)]]
 }
 
-// Today's share of the week, from the weekly limit. Reading it may re-anchor
-// the day, so the snapshot is saved here.
-function today(p: Payload, ctx: RenderContext): Segment | null {
-  const sd = p.rateLimits?.sevenDay
-  if (sd?.usedPercentage === undefined || sd.resetsAt === undefined) return null
+// Today's budget, from the weekly limit, or null without a reset time or once
+// it has passed. Reading it may re-anchor the day, so the snapshot is saved
+// here, for a week-only line too: the week needs the day count, and computing
+// it anchors the day.
+function budgetFor(sd: { usedPercentage?: number; resetsAt?: number }, ctx: RenderContext): Budget | null {
+  if (sd.usedPercentage === undefined || sd.resetsAt === undefined) return null
   const r = computeBudget(sd.usedPercentage, sd.resetsAt, ctx.nowMs, ctx.readSnapshot?.() ?? null, ctx.zone)
-  if (r === null) return null
-  if (r.snapshotChanged) ctx.saveSnapshot?.(r.snapshot)
-  return ctx.compact ? todayBar(r, ctx) : todayText(r, ctx)
+  if (r?.snapshotChanged) ctx.saveSnapshot?.(r.snapshot)
+  return r
 }
 
-// How far past the budget, at least 1%: a reading just past it rounds to
-// 100%, which would contradict the red.
-const overBy = (r: Budget) => Math.max(round(r.pctUsed) - 100, 1)
+/** The even daily budget in whole weekly points, where today's bar puts its marker. */
+const DAILY_BASE = round(EVEN_PACE)
 
-// Today counts up what's used of its budget and keeps counting past 100%
-// ("t 118% of 28%"), in red once over. Counting down shows what's left
-// instead, and past the budget, how far over you are ("t over 18% of 28%"),
-// since a countdown would go negative. The budget is dim: it is fixed for the
-// day, so it is context, not a warning.
-function todayText(r: Budget, ctx: RenderContext): Segment {
-  const budget = [span(' '), span(`of ${round(r.budget)}%${label(ctx, '', ' budget')}`, 'dim')]
-  const name = label(ctx, 't', 'today')
-  if (!ctx.config.countDown.today) {
-    if (r.over) {
-      return [span(`${name} ${100 + overBy(r)}%${label(ctx, '', ' used')}`, 'red'), ...budget]
-    }
-    return [headroom(ctx, round(r.pctLeft), `${name} ${round(r.pctUsed)}%${label(ctx, '', ' used')}`), ...budget]
-  }
-  if (r.over) return [span(`${name} over ${overBy(r)}%`, 'red'), ...budget]
-  const left = round(r.pctLeft)
-  return [headroom(ctx, left, `${name} ${left}%${label(ctx, '', ' left')}`), ...budget]
+// Today as "Today: <bar> 7/12": the bar, then the weekly points spent of
+// today's budget. Counting down, the numbers show what's left ("5/12 left")
+// or, past the budget, how far over ("3 over/12"). A budget above the even
+// daily base adds what's left of that surplus ("+4 saved"). Over budget,
+// tomorrow's budget follows ("-> 11 tmrw"), unless the week has nothing left
+// for it or it is the last day, when the reset brings a fresh week. On the
+// last day, the time the week runs out at today's pace follows instead, when
+// that comes before the reset.
+function today(r: Budget, ctx: RenderContext): Segment {
+  const budget = round(r.budget)
+  // A reading just past the budget can round to it; never show 12/12 in red.
+  const spent = r.over ? Math.max(round(r.spent), budget + 1) : round(r.spent)
+  const left = budget - spent
+  const text = !ctx.config.countDown.today
+    ? `${spent}/${budget}`
+    : r.over
+      ? `${-left} over/${budget}`
+      : `${left}/${budget} left`
+  const pieces: Span[][] = [
+    [span('Today:')],
+    todayBar(budget, spent),
+    [r.over ? span(text, 'red') : headroom(ctx, round(r.pctLeft), text)],
+  ]
+  const tomorrow = round(r.tomorrow)
+  if (left > DAILY_BASE) pieces.push([span(`+${left - DAILY_BASE} saved`, 'green')])
+  else if (r.over && tomorrow > 0) pieces.push([span(`${RIGHT_ARROW} ${tomorrow} tmrw`, 'red')])
+  // computeBudget sets runsOutAt only on the last day.
+  if (r.runsOutAt > 0) pieces.push([span('out ~' + clock(r.runsOutAt, ctx.nowMs, ctx.zone), 'red')])
+  return spaced(pieces)
 }
 
-// Today as a bar of five cells after the label, each a fifth of the budget,
-// rounded to the nearest cell: filled with what's used, or what's left when
-// counting down.
-// The label and filled cells take the headroom tone; empty cells are dim.
-// Over budget, the bar is full (or empty, counting down) and red, followed by
-// how far over, with no space ("+18%").
-function todayBar(r: Budget, ctx: RenderContext): Segment {
-  const name = label(ctx, 't', 'today') + ' '
-  const down = ctx.config.countDown.today
-  if (r.over) {
-    const over = span(`+${overBy(r)}%`, 'red')
-    return down
-      ? [span(name, 'red'), span(CELL_EMPTY.repeat(BAR_CELLS), 'dim'), over]
-      : [span(name + CELL_FULL.repeat(BAR_CELLS), 'red'), over]
+// Today's budget at one cell per weekly point, against a marker at the even
+// daily base. Full cells on the left are the budget left, drained cells the
+// rest of the base, and a faint red stretch the part of the base below a
+// smaller budget. A budget above the base starts with full cells past the
+// marker, and spending removes those first, so the bar shortens. Over budget,
+// the same full cells turn red and count the overage instead. A bar longer
+// than MAX_BAR_CELLS scales down to fit, marker included.
+function todayBar(budget: number, spent: number): Span[] {
+  const over = spent > budget
+  const full = over ? spent - budget : budget - spent
+  const length = Math.max(DAILY_BASE, full)
+  const scale = Math.min(1, MAX_BAR_CELLS / length)
+  const cellCount = round(length * scale)
+  const marker = round(DAILY_BASE * scale)
+
+  // Classifies a cell by the weekly point at its middle.
+  const kind = (i: number) => {
+    const point = (i + 0.5) / scale
+    if (point < full) return BAR_FULL
+    if (point < Math.min(budget, DAILY_BASE)) return BAR_DRAINED
+    return BAR_BELOW
   }
-  const shown = down ? r.pctLeft : r.pctUsed
-  const filled = Math.min(Math.max(round(shown / (100 / BAR_CELLS)), 0), BAR_CELLS)
-  const bar = [headroom(ctx, round(r.pctLeft), name + CELL_FULL.repeat(filled))]
-  if (filled < BAR_CELLS) bar.push(span(CELL_EMPTY.repeat(BAR_CELLS - filled), 'dim'))
-  return bar
+  const tone = (k: string): Tone =>
+    k === BAR_FULL ? (over ? 'red' : 'cyan') : k === BAR_BELOW ? FAINT_RED : 'dim'
+
+  const out: Span[] = [span(BAR_LEFT, 'dim')]
+  // Neighbors of the same kind share one span; the marker splits a run.
+  for (let i = 0; i < cellCount; ) {
+    let j = i + 1
+    while (j < cellCount && j !== marker && kind(j) === kind(i)) j++
+    out.push(span(kind(i).repeat(j - i), tone(kind(i))))
+    if (j === marker) out.push(span(BAR_MARKER))
+    i = j
+  }
+  // When nothing extends past the base, the marker closes the bar; an end cap
+  // right after it would read as a leftover sliver of surplus.
+  if (cellCount > marker) out.push(span(BAR_RIGHT, 'dim'))
+  return out
+}
+
+// The week as "w 58/100", then the days left until the reset. From three days
+// out the week figure turns bold: late in the week a single day absorbs all
+// the slack or debt, so today's budget can swing, and the week is the steadier
+// reference.
+function week(usedPct: number, r: Budget | null, ctx: RenderContext): Segment[] {
+  const used = Math.min(Math.max(round(usedPct), 0), 100)
+  const left = 100 - used
+  const name = label(ctx, 'w', 'week')
+  const figure = headroom(ctx, left, ctx.config.countDown.week ? `${name} ${left}/100 left` : `${name} ${used}/100`)
+  if (r === null) return [[figure]]
+  if (round(r.daysLeft) <= 3) figure.bold = true
+  return [[figure], [span(r.lastDay ? 'last day' : `${round(r.daysLeft)}d left`, 'dim')]]
 }
 
 // Context-window warning, silent while there is headroom.
@@ -363,8 +423,7 @@ function progressSegment(r: Run, nowMs: number): Segment | null {
     if (isPaused(r, nowMs)) status.push(span(' (paused)', 'dim'))
     parts.push(status)
   }
-  const kept = parts.filter(part => part.some(s => s.text !== ''))
-  return kept.flatMap((part, i) => (i === 0 ? part : [span(' '), ...part]))
+  return spaced(parts.filter(part => part.some(s => s.text !== '')))
 }
 
 const CELL_TONE: Record<Status, Tone> = {
@@ -433,10 +492,9 @@ function sgr(tone: Tone): string {
  * Go paceline prints it. With `noColor`, the same text with no escapes.
  */
 export function toAnsi(line: Line, noColor = false): string {
-  const draw = (s: Span) => {
-    const code = sgr(s.tone)
-    return noColor || code === '' ? s.text : `\x1b[${code}m${s.text}\x1b[0m`
-  }
+  const wrap = (code: string, text: string) => (noColor || code === '' ? text : `\x1b[${code}m${text}\x1b[0m`)
+  // Bold sits inside the color, as the Go paceline nests them.
+  const draw = (s: Span) => wrap(sgr(s.tone), s.bold ? wrap('1', s.text) : s.text)
   const separator = ' ' + draw(span(MIDDLE_DOT, 'dim')) + ' '
   return line.map(segment => segment.map(draw).join('')).join(separator)
 }

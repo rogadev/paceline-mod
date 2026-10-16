@@ -169,22 +169,24 @@ describe('live adapter', () => {
     // Neither limit runs out, so neither warns; the session ends its window
     // closer to 100%.
     expect(pick).toEqual({ show: 'session' })
+    // A 32-point budget is longer than the bar's 28 cells, so it scales down,
+    // marker included.
+    const bar = '\u2595' + '\u2588'.repeat(12) + '\u2502' + '\u2588'.repeat(16) + '\u258f'
     expect(toAnsi(line, true)).toBe(
-      't \u25b1\u25b1\u25b1\u25b1\u25b1 \u00b7 techcentral (dev) \u00b7 Opus 5.5 \u00b7 high \u00b7 ctx 72% \u00b7 16m',
+      `techcentral (dev) \u00b7 Opus 5.5 \u00b7 high \u00b7 Today: ${bar} 0/32 +18 saved \u00b7 w 4/100 \u00b7 3d left \u00b7 ctx 72% \u00b7 16m`,
     )
   })
 
-  test('limits "both" shows the session and the week after today', () => {
+  test('limits "both" shows a session turned on before today', () => {
     const config = defaultConfig()
     config.limits = 'both'
+    config.segments.session = true
     const { line, pick } = renderLive(toPayload(figures), config, state)
     expect(pick).toBe(null)
-    expect(toAnsi(line, true).startsWith('t \u25b1\u25b1\u25b1\u25b1\u25b1 \u00b7 s 16% \u00b7 w 4% \u00b7 techcentral')).toBe(
-      true,
-    )
+    expect(toAnsi(line, true).startsWith('techcentral (dev) \u00b7 Opus 5.5 \u00b7 high \u00b7 s 16% \u00b7 Today: ')).toBe(true)
   })
 
-  test('a week forecast to run out warns right after the bar', () => {
+  test('a week forecast to run out warns right after the week', () => {
     // Agents running around the clock: every hour active for a week, 14.4
     // points spent today, 40 points left, and two days to the reset.
     const now = Date.parse('2026-10-07T12:00:00Z')
@@ -208,9 +210,10 @@ describe('live adapter', () => {
     const { line, pick } = renderLive(p, defaultConfig(), { ...state, nowMs: now, snapshot, activity })
     expect(pick?.show).toBe('week')
     expect(pick?.outAt).toBeDefined()
-    expect(line[0][0].text.startsWith('t ')).toBe(true)
-    expect(line[1].length).toBe(1)
-    expect(line[1][0].text.startsWith('w\u2192')).toBe(true)
+    const days = line.findIndex(segment => segment[0].text.endsWith('d left'))
+    expect(line[days - 1][0].text).toBe('w 60/100')
+    expect(line[days + 1].length).toBe(1)
+    expect(line[days + 1][0].text.startsWith('w\u2192')).toBe(true)
   })
 
   test("the Go paceline's anchor wins only for the same day and week", () => {

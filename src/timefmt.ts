@@ -47,6 +47,18 @@ export function startOfDay(ms: number, zone: Zone): number {
 }
 
 /**
+ * The next midnight after the day that holds `ms`. It steps a calendar day,
+ * not 24 hours, so a 23- or 25-hour day at a daylight saving change is still
+ * one day.
+ */
+export function startOfNextDay(ms: number, zone: Zone): number {
+  const p = parts(ms, zone)
+  return zone === 'utc'
+    ? Date.UTC(p.year, p.month, p.day + 1)
+    : new Date(p.year, p.month, p.day + 1).getTime()
+}
+
+/**
  * Rounds `ms` down to a whole number of `stepMs` steps counted from
  * `dayStartMs`, a midnight from `startOfDay`. Counting from the day's own
  * midnight rather than the epoch keeps a zone with a half-hour offset on its

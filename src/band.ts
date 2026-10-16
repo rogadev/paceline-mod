@@ -36,7 +36,8 @@ function textProps(tone: Tone, surface: RenderSurface): Record<string, unknown> 
  * one, so a narrow window moves whole segments to the next row.
  */
 export function bandTree(line: Line, el: BandElements, surface: RenderSurface): RenderElement {
-  const text = (s: Span) => el.Text({ ...textProps(s.tone, surface), children: [s.text] })
+  const text = (s: Span) =>
+    el.Text({ ...textProps(s.tone, surface), ...(s.bold ? { bold: true } : {}), children: [s.text] })
   return el.Box({
     flexDirection: 'row',
     flexWrap: 'wrap',

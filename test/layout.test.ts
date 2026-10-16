@@ -4,19 +4,26 @@ import { defaultConfig, type Config } from '../src/config.ts'
 import type { Snapshot } from '../src/pace.ts'
 import { decodePayload } from '../src/payload.ts'
 import type { Run } from '../src/progress.ts'
-import { render, toAnsi, type LimitPick, type RenderContext, type Segment, type Tone } from '../src/render.ts'
+import { render, toAnsi, type LimitPick, type RenderContext } from '../src/render.ts'
 
 const DOT = ' \u00b7 '
 const FULL = '\u25b0'
 const EMPTY = '\u25b1'
+const BAR = '\u2588'
 const sec = (iso: string) => Date.parse(iso) / 1000
 
 // Wednesday noon. The week resets two days from midnight and stood at 40%
-// when the day began, so today's budget is 30 points of the week: each point
-// spent is 3.33% of the budget.
+// when the day began, so today's budget is 30 points of the week, 16 above
+// the daily base of 14.
 const NOW = Date.parse('2026-10-07T12:00:00Z')
 const WEEK_RESET = sec('2026-10-09T00:00:00Z')
 const SNAPSHOT: Snapshot = { date: '20261007', resetsAt: WEEK_RESET, usedAtStart: 40 }
+
+// At the default 46% of the week, 6 points are spent: 24 left, 10 of them
+// past the base marker.
+const TODAY = 'Today: \u2595' + BAR.repeat(14) + '\u2502' + BAR.repeat(10) + '\u258f 6/30 +10 saved'
+const WEEK = ['w 46/100', '2d left']
+const HEAD = ['paceline (dev)', 'Opus 5.5', 'high']
 
 type Figures = {
   week?: number
@@ -61,122 +68,51 @@ function compact(
   })
 }
 
-/** A config with only today's segment on, so the line is just the bar. */
-function todayOnly(change: (c: Config) => void = () => {}): Config {
+const text = (line: ReturnType<typeof compact>) => toAnsi(line, true)
+
+/** A default config with the session segment on. */
+function withSession(): Config {
   const c = defaultConfig()
-  for (const key of Object.keys(c.segments) as (keyof Config['segments'])[]) c.segments[key] = false
-  c.segments.today = true
-  change(c)
+  c.segments.session = true
   return c
 }
 
-/** Today's bar for `week` percent of the week used. */
-const bar = (week: number, config = todayOnly()): Segment => compact({ week }, config)[0]
+// Where the warning lands: after the project, model, effort, today, the week,
+// and its days left.
+const WARNING = 6
 
 describe('compact layout', () => {
-  test('today bar fill and colors', () => {
-    // Points spent today, and the bar they draw: cells round to the nearest
-    // fifth of the budget, in the headroom tone of what's left.
-    const cases: [number, number, Tone][] = [
-      [0, 0, 'green'], //     0% used
-      [2.7, 0, 'green'], //   9% used
-      [3, 1, 'green'], //    10% used, a half cell rounds up
-      [5.7, 1, 'green'], //  19% used
-      [6, 1, 'green'], //    20% used
-      [15, 3, 'green'], //   50% used
-      [22.5, 4, 'yellow'], // 75% used, 25% left
-      [27, 5, 'red'], //     90% used, 10% left
-      [30, 5, 'red'], //    100% used, not over
-    ]
-    for (const [spent, filled, tone] of cases) {
-      const want: Segment = [{ text: 't ' + FULL.repeat(filled), tone }]
-      if (filled < 5) want.push({ text: EMPTY.repeat(5 - filled), tone: 'dim' })
-      expect(`${spent}: ${JSON.stringify(bar(40 + spent))}`).toBe(`${spent}: ${JSON.stringify(want)}`)
-    }
-  })
-
-  test('counting down fills what is left', () => {
-    const down = todayOnly(c => {
-      c.countDown.today = true
-    })
-    expect(bar(46, down)).toEqual([
-      { text: 't ' + FULL.repeat(4), tone: 'green' },
-      { text: EMPTY, tone: 'dim' },
-    ])
-    expect(bar(64, down)).toEqual([
-      { text: 't ' + FULL, tone: 'yellow' },
-      { text: EMPTY.repeat(4), tone: 'dim' },
-    ])
-  })
-
-  test('verbose labels the bar today', () => {
-    const verbose = todayOnly(c => {
-      c.verbose = true
-    })
-    expect(toAnsi([bar(46, verbose)], true)).toBe('today ' + FULL + EMPTY.repeat(4))
-  })
-
-  test('over budget shows a full red bar and how far over', () => {
-    expect(bar(76)).toEqual([
-      { text: 't ' + FULL.repeat(5), tone: 'red' },
-      { text: '+20%', tone: 'red' },
-    ])
-    // Just past the budget rounds to 100%; it still reads as over.
-    expect(toAnsi([bar(70.1)], true)).toBe('t ' + FULL.repeat(5) + '+1%')
-    const down = todayOnly(c => {
-      c.countDown.today = true
-    })
-    expect(bar(76, down)).toEqual([
-      { text: 't ', tone: 'red' },
-      { text: EMPTY.repeat(5), tone: 'dim' },
-      { text: '+20%', tone: 'red' },
-    ])
-  })
-
-  test('counting down at exactly the budget is an empty red bar, not over', () => {
-    const down = todayOnly(c => {
-      c.countDown.today = true
-    })
-    expect(bar(70, down)).toEqual([
-      { text: 't ', tone: 'red' },
-      { text: EMPTY.repeat(5), tone: 'dim' },
-    ])
-  })
-
-  test('compact order with no warning', () => {
+  test('project, model, and effort lead, then today and the week', () => {
     const quiet: LimitPick = { show: 'week' }
-    expect(toAnsi(compact({}, defaultConfig(), quiet), true)).toBe(
-      ['t ' + FULL + EMPTY.repeat(4), 'paceline (dev)', 'Opus 5.5', 'high', '59m'].join(DOT),
+    expect(text(compact({}, defaultConfig(), quiet))).toBe([...HEAD, TODAY, ...WEEK, '59m'].join(DOT))
+    expect(text(compact({ fast: true, context: 80, cacheCold: true }, defaultConfig(), quiet))).toBe(
+      [...HEAD, 'fast mode', TODAY, ...WEEK, 'ctx 80%', 'cache cold: ~2x', '59m'].join(DOT),
     )
-    expect(toAnsi(compact({ fast: true, context: 80, cacheCold: true }, defaultConfig(), quiet), true)).toBe(
-      [
-        't ' + FULL + EMPTY.repeat(4),
-        'paceline (dev)',
-        'Opus 5.5',
-        'high',
-        'fast mode',
-        'ctx 80%',
-        'cache cold: ~2x',
-        '59m',
-      ].join(DOT),
-    )
+  })
+
+  test('today and the week are the Go segments', () => {
+    const go = render(payload(), { nowMs: NOW, zone: 'utc', config: defaultConfig(), readSnapshot: () => SNAPSHOT })
+    const line = compact({}, defaultConfig(), { show: 'week' })
+    expect(line.slice(3, 6)).toEqual(go.slice(3, 6))
+    // Two days out, the week figure is bold.
+    expect(line[4]).toEqual([{ text: 'w 46/100', tone: 'green', bold: true }])
   })
 
   test('effort is the bare level, dim, and verbose spells it out', () => {
     const line = compact({}, defaultConfig(), { show: 'week' })
-    expect(line[3]).toEqual([{ text: 'high', tone: 'dim' }])
+    expect(line[2]).toEqual([{ text: 'high', tone: 'dim' }])
     const verbose = defaultConfig()
     verbose.verbose = true
-    expect(compact({}, verbose, { show: 'week' })[3]).toEqual([{ text: 'high effort', tone: 'dim' }])
+    expect(compact({}, verbose, { show: 'week' })[2]).toEqual([{ text: 'high effort', tone: 'dim' }])
     // An everyday level stays quiet, as in the Go layout.
-    expect(toAnsi(compact({ effort: 'medium' }, defaultConfig(), { show: 'week' }), true)).toBe(
-      ['t ' + FULL + EMPTY.repeat(4), 'paceline (dev)', 'Opus 5.5', '59m'].join(DOT),
+    expect(text(compact({ effort: 'medium' }, defaultConfig(), { show: 'week' }))).toBe(
+      ['paceline (dev)', 'Opus 5.5', TODAY, ...WEEK, '59m'].join(DOT),
     )
   })
 
   test('week warning', () => {
     const warning = (outAt: string, config = defaultConfig()) =>
-      compact({}, config, { show: 'week', outAt: sec(outAt) })[1]
+      compact({}, config, { show: 'week', outAt: sec(outAt) })[WARNING]
     // More than a day away: yellow, rounded down to the hour.
     expect(warning('2026-10-08T21:40:00Z')).toEqual([{ text: 'w\u2192Thu 9pm', tone: 'yellow' }])
     expect(warning('2026-10-08T12:30:00Z')).toEqual([{ text: 'w\u2192Thu 12pm', tone: 'yellow' }])
@@ -187,25 +123,25 @@ describe('compact layout', () => {
     const verbose = defaultConfig()
     verbose.verbose = true
     expect(warning('2026-10-08T21:40:00Z', verbose)).toEqual([{ text: 'week\u2192Thu 9pm', tone: 'yellow' }])
-    expect(toAnsi(compact({}, defaultConfig(), { show: 'week', outAt: sec('2026-10-08T21:40:00Z') }), true)).toBe(
-      ['t ' + FULL + EMPTY.repeat(4), 'w\u2192Thu 9pm', 'paceline (dev)', 'Opus 5.5', 'high', '59m'].join(DOT),
+    expect(text(compact({}, defaultConfig(), { show: 'week', outAt: sec('2026-10-08T21:40:00Z') }))).toBe(
+      [...HEAD, TODAY, ...WEEK, 'w\u2192Thu 9pm', '59m'].join(DOT),
     )
   })
 
   test('session warning', () => {
-    const warning = (outAt: string, config = defaultConfig()) =>
-      compact({ session: 80 }, config, { show: 'session', outAt: sec(outAt) })[1]
+    const warning = (outAt: string, config = withSession()) =>
+      compact({ session: 80 }, config, { show: 'session', outAt: sec(outAt) })[WARNING]
     expect(warning('2026-10-07T13:59:00Z')).toEqual([{ text: 's\u21921:45pm', tone: 'red' }])
     expect(warning('2026-10-07T13:00:00Z')).toEqual([{ text: 's\u21921pm', tone: 'red' }])
     expect(warning('2026-10-07T12:14:59Z')).toEqual([{ text: 's\u219212pm', tone: 'red' }])
-    const verbose = defaultConfig()
+    const verbose = withSession()
     verbose.verbose = true
     expect(warning('2026-10-07T13:59:00Z', verbose)).toEqual([{ text: 'session\u21921:45pm', tone: 'red' }])
   })
 
   test('an out time inside the current step shows the exact minute, not a time already passed', () => {
     const warningAt = (now: string, pick: LimitPick) =>
-      compact({ session: 80 }, defaultConfig(), pick, { nowMs: Date.parse(now) })[1]
+      compact({ session: 80 }, withSession(), pick, { nowMs: Date.parse(now) })[WARNING]
     expect(warningAt('2026-10-07T13:52:00Z', { show: 'session', outAt: sec('2026-10-07T13:58:00Z') })).toEqual([
       { text: 's\u21921:58pm', tone: 'red' },
     ])
@@ -235,17 +171,10 @@ describe('compact layout', () => {
       updatedAtMs: NOW,
     }
     const line = compact({ context: 80, cacheCold: true }, defaultConfig(), { show: 'week' }, { progress: () => run })
-    expect(toAnsi(line, true)).toBe(
-      [
-        't ' + FULL + EMPTY.repeat(4),
-        'paceline (dev)',
-        'Opus 5.5',
-        'high',
-        'ctx 80%',
-        'cache cold: ~2x',
-        'loop ' + FULL + FULL + EMPTY + ' #2 1/3',
-        '59m',
-      ].join(DOT),
+    expect(text(line)).toBe(
+      [...HEAD, TODAY, ...WEEK, 'ctx 80%', 'cache cold: ~2x', 'loop ' + FULL + FULL + EMPTY + ' #2 1/3', '59m'].join(
+        DOT,
+      ),
     )
   })
 
@@ -256,33 +185,33 @@ describe('compact layout', () => {
   })
 
   test('no warning without an out time', () => {
-    const want = ['t ' + FULL + EMPTY.repeat(4), 'paceline (dev)', 'Opus 5.5', 'high', '59m'].join(DOT)
-    expect(toAnsi(compact({ session: 80 }, defaultConfig(), { show: 'session' }), true)).toBe(want)
-    expect(toAnsi(compact({}, defaultConfig(), { show: 'week' }), true)).toBe(want)
+    const want = [...HEAD, TODAY, ...WEEK, '59m'].join(DOT)
+    expect(text(compact({ session: 80 }, withSession(), { show: 'session' }))).toBe(want)
+    expect(text(compact({}, defaultConfig(), { show: 'week' }))).toBe(want)
   })
 
   test('a limit turned off in the config never warns', () => {
     const config = defaultConfig()
     config.segments.week = false
     const line = compact({}, config, { show: 'week', outAt: sec('2026-10-08T21:40:00Z') })
-    expect(toAnsi(line, true)).toBe(
-      ['t ' + FULL + EMPTY.repeat(4), 'paceline (dev)', 'Opus 5.5', 'high', '59m'].join(DOT),
+    expect(text(line)).toBe([...HEAD, TODAY, '59m'].join(DOT))
+    // The session is off by default, so it never warns unless turned on.
+    expect(text(compact({ session: 80 }, defaultConfig(), { show: 'session', outAt: sec('2026-10-07T13:59:00Z') }))).toBe(
+      [...HEAD, TODAY, ...WEEK, '59m'].join(DOT),
     )
   })
 
-  test('limits both shows both percentages', () => {
-    expect(toAnsi(compact({}), true)).toBe(
-      ['t ' + FULL + EMPTY.repeat(4), 's 4%', 'w 46%', 'paceline (dev)', 'Opus 5.5', 'high', '59m'].join(DOT),
-    )
-    // The session's reset time shows once its headroom runs low, as in the Go layout.
-    const line = compact({ session: 80 })
-    expect(line[1]).toEqual([{ text: 's 80% (resets 2:30pm)', tone: 'yellow' }])
+  test('without a pick, a session turned on shows before today, as in the Go layout', () => {
+    expect(text(compact({}))).toBe([...HEAD, TODAY, ...WEEK, '59m'].join(DOT))
+    expect(text(compact({}, withSession()))).toBe([...HEAD, 's 4%', TODAY, ...WEEK, '59m'].join(DOT))
+    // The session's reset time shows once its headroom runs low.
+    expect(compact({ session: 80 }, withSession())[3]).toEqual([{ text: 's 80% (resets 2:30pm)', tone: 'yellow' }])
   })
 
   test('with no rate limits there is no bar and no warning', () => {
     const p = payload()
     p.rateLimits = undefined
     const line = render(p, { nowMs: NOW, zone: 'utc', config: defaultConfig(), branch: () => 'dev', compact: true })
-    expect(toAnsi(line, true)).toBe(['paceline (dev)', 'Opus 5.5', 'high', '59m'].join(DOT))
+    expect(text(line)).toBe([...HEAD, '59m'].join(DOT))
   })
 })
