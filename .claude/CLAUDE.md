@@ -1,6 +1,6 @@
 # paceline-mod
 
-paceline as a Claude Code mod: a TypeScript plugin that draws paceline's usage line in the band above the prompt. It is a port of the Go status line in [rogadev/paceline](https://github.com/rogadev/paceline) (local checkout: `~/Documents/GitHub/paceline`), which stays the classic `statusLine` version. paceline-tray is retired and kept only for posterity.
+paceline as a Claude Code mod: a TypeScript plugin that draws paceline's usage line in the band above the prompt. It is a port of the Go status line in [rogadev/paceline](https://github.com/rogadev/paceline) (local checkout: `~/Documents/GitHub/paceline`), which is still released as the classic `statusLine` version for anyone who prefers it. On the owner's machine the Go status line was retired on 2026-10-16 in favor of this mod, so it no longer refreshes `~/.claude/paceline-day.json` there. Until #2 moves them into the band, a personal `statusLine` wrapper (`~/.claude/statusline/statusline.mjs`) still shows the review-batch and `/orc-loop` segments under the prompt. paceline-tray is retired and kept only for posterity.
 
 Read `docs/notes.md` before changing how the mod talks to Claude Code: it holds what the mods platform can and can't do, the drawing test's results, and the API facts this design rests on.
 
