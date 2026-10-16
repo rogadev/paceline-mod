@@ -1,6 +1,6 @@
 # paceline-mod
 
-paceline as a Claude Code mod: a TypeScript plugin that draws paceline's usage line in the band above the prompt. It is a port of the Go status line in [rogadev/paceline](https://github.com/rogadev/paceline) (local checkout: `~/Documents/GitHub/paceline`), which stays the classic `statusLine` version. paceline-tray is retired and kept only for posterity.
+paceline as a Claude Code mod: a TypeScript plugin that draws paceline's usage line in the band above the prompt. It is a port of the Go status line in [rogadev/paceline](https://github.com/rogadev/paceline) (local checkout: `~/Documents/GitHub/paceline`), which is still released as the classic `statusLine` version for anyone who prefers it. On the owner's machine the Go status line was retired on 2026-10-16 in favor of this mod, so it no longer refreshes `~/.claude/paceline-day.json` there. Until #2 moves them into the band, a personal `statusLine` wrapper (`~/.claude/statusline/statusline.mjs`) still shows the review-batch and `/orc-loop` segments under the prompt. paceline-tray is retired and kept only for posterity.
 
 Read `docs/notes.md` before changing how the mod talks to Claude Code: it holds what the mods platform can and can't do, the drawing test's results, and the API facts this design rests on.
 
@@ -8,7 +8,7 @@ Read `docs/notes.md` before changing how the mod talks to Claude Code: it holds 
 
 ```
 .claude-plugin/plugin.json       manifest; the plugin's name is `paceline`
-.claude-plugin/marketplace.json  makes this repo a marketplace (`/plugin install paceline --marketplace rogadev/paceline-mod`)
+.claude-plugin/marketplace.json  makes this repo a marketplace (`/plugin marketplace add rogadev/paceline-mod`, then `/plugin install paceline@paceline-mod`)
 hooks/hooks.json                 names the hooks module
 hooks/register.ts                the hooks module: events, refresh loop, and EVERY call on `$`
 src/                             pure logic, no `$`: pace, render, color, md5, config, payload, progress, gitinfo, sanitize, timefmt, model, live, band
@@ -50,6 +50,8 @@ Run all three before every commit.
 The user judges changes by seeing them, so try every change live before committing:
 
 1. Load the repo in a session, either with `claude --plugin-dir ~/Documents/GitHub/paceline-mod`, or by linking the repo into the current session's mods folder (Windows: `New-Item -ItemType Junction -Path <dev-mods>/<session>/paceline -Target <repo>`). The `plugin-authoring` skill names that folder.
+   - A link does nothing until the `plugin-authoring` skill has loaded in that session and the user has answered "Enable for this session" to its hot-reloading question. Load the skill first, then make the link.
+   - If the session also has `paceline@paceline-mod` installed from the marketplace, it loads the mod twice and can draw two bands. Disable the installed copy for that session, or test in one without it.
 2. With hot reloading on, the mod reloads when a turn that edited it ends. A failed hook or a refused tree shows as a dim line in the transcript naming `paceline`.
 3. Show the user, and commit only after they approve.
 
