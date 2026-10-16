@@ -8,7 +8,7 @@ Read `docs/notes.md` before changing how the mod talks to Claude Code: it holds 
 
 ```
 .claude-plugin/plugin.json       manifest; the plugin's name is `paceline`
-.claude-plugin/marketplace.json  makes this repo a marketplace (`/plugin install paceline --marketplace rogadev/paceline-mod`)
+.claude-plugin/marketplace.json  makes this repo a marketplace (`/plugin marketplace add rogadev/paceline-mod`, then `/plugin install paceline@paceline-mod`)
 hooks/hooks.json                 names the hooks module
 hooks/register.ts                the hooks module: events, refresh loop, and EVERY call on `$`
 src/                             pure logic, no `$`: pace, render, color, md5, config, payload, progress, gitinfo, sanitize, timefmt, model, live, band

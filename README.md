@@ -14,13 +14,14 @@ This is the mod version of [paceline](https://github.com/rogadev/paceline), the 
 
 ## Install
 
-In a Claude Code session in your terminal, run:
+In a Claude Code session in your terminal, add this repo as a marketplace, then install the plugin from it:
 
 ```
-/plugin install paceline --marketplace rogadev/paceline-mod
+/plugin marketplace add rogadev/paceline-mod
+/plugin install paceline@paceline-mod
 ```
 
-Answer `y` to add the marketplace, then pick a scope (user scope puts it in every session). The line appears above the prompt right away.
+Pick a scope when asked (user scope puts it in every session). The line appears above the prompt right away.
 
 Requirements:
 
