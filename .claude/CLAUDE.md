@@ -50,6 +50,8 @@ Run all three before every commit.
 The user judges changes by seeing them, so try every change live before committing:
 
 1. Load the repo in a session, either with `claude --plugin-dir ~/Documents/GitHub/paceline-mod`, or by linking the repo into the current session's mods folder (Windows: `New-Item -ItemType Junction -Path <dev-mods>/<session>/paceline -Target <repo>`). The `plugin-authoring` skill names that folder.
+   - A link does nothing until the `plugin-authoring` skill has loaded in that session and the user has answered "Enable for this session" to its hot-reloading question. Load the skill first, then make the link.
+   - If the session also has `paceline@paceline-mod` installed from the marketplace, it loads the mod twice and can draw two bands. Disable the installed copy for that session, or test in one without it.
 2. With hot reloading on, the mod reloads when a turn that edited it ends. A failed hook or a refused tree shows as a dim line in the transcript naming `paceline`.
 3. Show the user, and commit only after they approve.
 

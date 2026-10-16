@@ -151,6 +151,8 @@ Run a session with your working copy loaded:
 claude --plugin-dir ./paceline-mod
 ```
 
+If you also have paceline installed from the marketplace, that session loads the mod twice and can draw two bands. Disable the installed copy in `/plugin` while you test, then turn it back on.
+
 Check it:
 
 ```sh
