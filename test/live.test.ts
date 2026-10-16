@@ -7,7 +7,8 @@ import { branchIn, findGitDir, type GitFs } from '../src/gitinfo.ts'
 import { chooseSnapshot, configDirFrom, renderLive, toLimit, toPayload } from '../src/live.ts'
 import { modelName } from '../src/model.ts'
 import { render, toAnsi } from '../src/render.ts'
-import { clock, dateKey, duration } from '../src/timefmt.ts'
+import type { Activity } from '../src/forecast.ts'
+import { clock, dateKey, duration, floorInDay } from '../src/timefmt.ts'
 
 describe('modelName', () => {
   const cases: [string, string][] = [
@@ -80,6 +81,9 @@ describe('config', () => {
     expect(c.countDown).toEqual({ session: false, week: true, today: false })
     expect(c.projectSlots).toEqual({ site: 4 })
     expect(c.verbose).toBe(true)
+    expect(c.limits).toBe('auto')
+    expect(parseConfig('{"limits": "both"}').limits).toBe('both')
+    expect(parseConfig('{"limits": "sideways"}').limits).toBe('auto')
   })
 
   test('a broken file or a section of the wrong type gives the defaults', () => {
@@ -100,6 +104,13 @@ describe('time formatting', () => {
     expect(duration(40_999)).toBe('40s')
     expect(duration(15 * 60_000 + 59_000)).toBe('15m')
     expect(duration(65 * 60_000)).toBe('1h5m')
+  })
+  test('rounds within a half-hour-offset day', () => {
+    // Midnight in India (UTC+5:30). Stepping from the epoch would give 08:00Z.
+    const dayStart = Date.parse('2026-10-06T18:30:00Z')
+    expect(floorInDay(Date.parse('2026-10-07T08:10:00Z'), 60 * 60_000, dayStart)).toBe(
+      Date.parse('2026-10-07T07:30:00Z'),
+    )
   })
   test('dateKey reads the local day', () => {
     const local = new Date(2026, 0, 2, 23, 30).getTime()
@@ -149,13 +160,59 @@ describe('live adapter', () => {
     expect(toLimit(undefined)).toBe(undefined)
   })
 
-  test('renders the whole line and anchors today', () => {
+  const state = { snapshot: null, branch: 'dev', run: null, activity: null, nowMs }
+
+  test('renders the whole line, compact, and anchors today', () => {
     const p = toPayload(figures)
-    const { line, save } = renderLive(p, defaultConfig(), null, 'dev', null, nowMs)
+    const { line, save, pick } = renderLive(p, defaultConfig(), state)
     expect(save?.usedAtStart).toBe(4)
-    const text = toAnsi(line, true)
-    expect(text.startsWith('Opus 5.5 \u00b7 high effort \u00b7 techcentral (dev) \u00b7 s 16% \u00b7 w 4% \u00b7 t 0% of ')).toBe(true)
-    expect(text.endsWith(' \u00b7 ctx 72% \u00b7 16m')).toBe(true)
+    // Neither limit runs out, so neither warns; the session ends its window
+    // closer to 100%.
+    expect(pick).toEqual({ show: 'session' })
+    // A 32-point budget is longer than the bar's 28 cells, so it scales down,
+    // marker included.
+    const bar = '\u2595' + '\u2588'.repeat(12) + '\u2502' + '\u2588'.repeat(16) + '\u258f'
+    expect(toAnsi(line, true)).toBe(
+      `techcentral (dev) \u00b7 Opus 5.5 \u00b7 high \u00b7 Today: ${bar} 0/32 +18 saved \u00b7 w 4/100 \u00b7 3d left \u00b7 ctx 72% \u00b7 16m`,
+    )
+  })
+
+  test('limits "both" shows a session turned on before today', () => {
+    const config = defaultConfig()
+    config.limits = 'both'
+    config.segments.session = true
+    const { line, pick } = renderLive(toPayload(figures), config, state)
+    expect(pick).toBe(null)
+    expect(toAnsi(line, true).startsWith('techcentral (dev) \u00b7 Opus 5.5 \u00b7 high \u00b7 s 16% \u00b7 Today: ')).toBe(true)
+  })
+
+  test('a week forecast to run out says when, after the week figure', () => {
+    // Agents running around the clock: every hour active for a week, 14.4
+    // points spent today, 40 points left, and two days to the reset.
+    const now = Date.parse('2026-10-07T12:00:00Z')
+    const activity: Activity = { days: {}, last: { session: 20, week: 60, changedAtMs: now - 60_000 } }
+    for (let i = 0; i <= 7; i++) {
+      activity.days[dateKey(now - i * 24 * 3600_000, 'local')] = { seen: 0xffffff, active: 0xffffff }
+    }
+    const weekReset = '2026-10-09T12:00:00Z'
+    const p = toPayload({
+      ...figures,
+      nowMs: now,
+      usage: usage({
+        startedAt: now - 60 * 60_000,
+        rateLimits: [
+          { kind: 'five_hour', percentUsed: 20, resetsAt: '2026-10-07T15:00:00Z' },
+          { kind: 'seven_day', percentUsed: 60, resetsAt: weekReset },
+        ],
+      }),
+    })
+    const snapshot = { date: dateKey(now, 'local'), resetsAt: Date.parse(weekReset) / 1000, usedAtStart: 45.6 }
+    const { line, pick } = renderLive(p, defaultConfig(), { ...state, nowMs: now, snapshot, activity })
+    expect(pick?.show).toBe('week')
+    expect(pick?.outAt).toBeDefined()
+    const figure = line.findIndex(segment => segment[0].text === 'w 60/100')
+    expect(line[figure + 1].length).toBe(1)
+    expect(line[figure + 1][0].text.startsWith('out ~')).toBe(true)
   })
 
   test("the Go paceline's anchor wins only for the same day and week", () => {
@@ -202,7 +259,7 @@ describe('band', () => {
     const firstKids = segments[0].props.children as Node[]
     const secondKids = segments[1].props.children as Node[]
     expect(firstKids[0].props).toEqual({ color: 'cyan', children: ['Opus 5.5'] })
-    expect(secondKids[0].props).toEqual({ dimColor: true, children: [' \u00b7 '] })
+    expect(secondKids[0].props).toEqual({ color: '#767676', children: [' \u00b7 '] })
   })
 
   test('the terminal keeps its own palette; other surfaces get fixed colors', () => {

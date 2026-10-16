@@ -1,4 +1,4 @@
-// Copied from rogadev/paceline internal/render/testdata/parity.json at 8d251e6.
+// Copied from rogadev/paceline internal/render/testdata/parity.json at 7a480ff.
 // The Go paceline's own test fixtures: the TypeScript port must print the
 // same bytes for every case. Copy the file again when the Go fixtures change;
 // do not edit the cases by hand.
@@ -44,7 +44,7 @@ export const PARITY_CASES: ParityCase[] = [
             "total_duration_ms": 960000
           }
         },
-        "want": "\u001b[36mOpus 5.5\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[38;2;73;207;252mtechcentral\u001b[0m \u001b[2m(\u001b[0mdev\u001b[2m)\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32ms 84%\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32mw 96%\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32mt 100%\u001b[0m \u001b[2mof 28%\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[2m16m\u001b[0m"
+        "want": "\u001b[36mOpus 5.5\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[38;2;73;207;252mtechcentral\u001b[0m \u001b[2m(\u001b[0mdev\u001b[2m)\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32ms 84%\u001b[0m \u001b[2m\u00b7\u001b[0m Today: \u001b[2m\u2595\u001b[0m\u001b[36m\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u001b[0m\u2502\u001b[36m\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u001b[0m\u001b[2m\u258f\u001b[0m \u001b[32m28/28 left\u001b[0m \u001b[32m+14 saved\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32m\u001b[1mw 96/100 left\u001b[0m\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[2m3d left\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[2m16m\u001b[0m"
       }
     ]
   },
@@ -62,7 +62,7 @@ export const PARITY_CASES: ParityCase[] = [
             }
           }
         },
-        "want": "\u001b[32mw 100%\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32mt 100%\u001b[0m \u001b[2mof 14%\u001b[0m"
+        "want": "Today: \u001b[2m\u2595\u001b[0m\u001b[36m\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u001b[0m\u2502 \u001b[32m14/14 left\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32mw 100/100 left\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[2m7d left\u001b[0m"
       },
       {
         "now": "2026-09-24T10:00:00Z",
@@ -74,7 +74,7 @@ export const PARITY_CASES: ParityCase[] = [
             }
           }
         },
-        "want": "\u001b[32mw 90%\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32mt 30%\u001b[0m \u001b[2mof 14%\u001b[0m"
+        "want": "Today: \u001b[2m\u2595\u001b[0m\u001b[36m\u2588\u2588\u2588\u2588\u001b[0m\u001b[2m\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u001b[0m\u2502 \u001b[32m4/14 left\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32mw 90/100 left\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[2m7d left\u001b[0m"
       },
       {
         "now": "2026-09-24T10:00:00Z",
@@ -86,7 +86,7 @@ export const PARITY_CASES: ParityCase[] = [
             }
           }
         },
-        "want": "\u001b[32mw 86%\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[38;2;185;47;47mt 2%\u001b[0m \u001b[2mof 14%\u001b[0m"
+        "want": "Today: \u001b[2m\u2595\u001b[0m\u001b[2m\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u001b[0m\u2502 \u001b[38;2;185;47;47m0/14 left\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32mw 86/100 left\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[2m7d left\u001b[0m"
       },
       {
         "now": "2026-09-24T10:00:00Z",
@@ -98,7 +98,7 @@ export const PARITY_CASES: ParityCase[] = [
             }
           }
         },
-        "want": "\u001b[32mw 85%\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[38;2;185;47;47mt over 5%\u001b[0m \u001b[2mof 14%\u001b[0m"
+        "want": "Today: \u001b[2m\u2595\u001b[0m\u001b[38;2;185;47;47m\u2588\u001b[0m\u001b[2m\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u001b[0m\u2502 \u001b[38;2;185;47;47m1 over/14\u001b[0m \u001b[38;2;185;47;47m\u2192 14 tmrw\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32mw 85/100 left\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[2m7d left\u001b[0m"
       },
       {
         "now": "2026-09-24T10:00:00Z",
@@ -110,7 +110,7 @@ export const PARITY_CASES: ParityCase[] = [
             }
           }
         },
-        "want": "\u001b[32mw 80%\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[38;2;185;47;47mt over 40%\u001b[0m \u001b[2mof 14%\u001b[0m"
+        "want": "Today: \u001b[2m\u2595\u001b[0m\u001b[38;2;185;47;47m\u2588\u2588\u2588\u2588\u2588\u2588\u001b[0m\u001b[2m\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u2591\u001b[0m\u2502 \u001b[38;2;185;47;47m6 over/14\u001b[0m \u001b[38;2;185;47;47m\u2192 13 tmrw\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32mw 80/100 left\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[2m7d left\u001b[0m"
       }
     ]
   },
@@ -128,7 +128,7 @@ export const PARITY_CASES: ParityCase[] = [
             }
           }
         },
-        "want": "\u001b[32mw 100%\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32mt 100%\u001b[0m \u001b[2mof 14%\u001b[0m"
+        "want": "Today: \u001b[2m\u2595\u001b[0m\u001b[36m\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u001b[0m\u2502 \u001b[32m14/14 left\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32mw 100/100 left\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[2m7d left\u001b[0m"
       },
       {
         "now": "2026-09-25T09:00:00Z",
@@ -140,7 +140,7 @@ export const PARITY_CASES: ParityCase[] = [
             }
           }
         },
-        "want": "\u001b[32mw 95%\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32mt 100%\u001b[0m \u001b[2mof 16%\u001b[0m"
+        "want": "Today: \u001b[2m\u2595\u001b[0m\u001b[36m\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u001b[0m\u2502\u001b[36m\u2588\u2588\u001b[0m\u001b[2m\u258f\u001b[0m \u001b[32m16/16 left\u001b[0m \u001b[32m+2 saved\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32mw 95/100 left\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[2m6d left\u001b[0m"
       }
     ]
   },
@@ -158,7 +158,7 @@ export const PARITY_CASES: ParityCase[] = [
             }
           }
         },
-        "want": "\u001b[38;2;185;47;47mw 12%\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32mt 100%\u001b[0m \u001b[2mof 5%\u001b[0m"
+        "want": "Today: \u001b[2m\u2595\u001b[0m\u001b[36m\u2588\u2588\u2588\u2588\u2588\u001b[0m\u001b[38;2;136;66;66m\u2592\u2592\u2592\u2592\u2592\u2592\u2592\u2592\u2592\u001b[0m\u2502 \u001b[32m5/5 left\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[38;2;185;47;47m\u001b[1mw 12/100 left\u001b[0m\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[2m2d left\u001b[0m"
       }
     ]
   },
@@ -176,7 +176,7 @@ export const PARITY_CASES: ParityCase[] = [
             }
           }
         },
-        "want": "\u001b[38;2;185;47;47mw 8%\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32mt 100%\u001b[0m \u001b[2mof 8%\u001b[0m"
+        "want": "Today: \u001b[2m\u2595\u001b[0m\u001b[36m\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u001b[0m\u001b[38;2;136;66;66m\u2592\u2592\u2592\u2592\u2592\u2592\u001b[0m\u2502 \u001b[32m8/8 left\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[38;2;185;47;47m\u001b[1mw 8/100 left\u001b[0m\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[2mlast day\u001b[0m"
       }
     ]
   },
@@ -194,7 +194,7 @@ export const PARITY_CASES: ParityCase[] = [
             }
           }
         },
-        "want": "\u001b[32mw 40%\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32mt 100%\u001b[0m \u001b[2mof 39%\u001b[0m"
+        "want": "Today: \u001b[2m\u2595\u001b[0m\u001b[36m\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u001b[0m\u2502\u001b[36m\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u001b[0m\u001b[2m\u258f\u001b[0m \u001b[32m39/39 left\u001b[0m \u001b[32m+25 saved\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[32m\u001b[1mw 40/100 left\u001b[0m\u001b[0m \u001b[2m\u00b7\u001b[0m \u001b[2m1d left\u001b[0m"
       }
     ]
   },
@@ -212,7 +212,7 @@ export const PARITY_CASES: ParityCase[] = [
             }
           }
         },
-        "want": "\u001b[32mw 50%\u001b[0m"
+        "want": "\u001b[32mw 50/100 left\u001b[0m"
       }
     ]
   },

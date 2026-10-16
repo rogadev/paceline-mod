@@ -2,8 +2,10 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import { bandTree, type BandElements } from '../src/band.ts'
 import { defaultConfig, parseConfig } from '../src/config.ts'
+import { isActivity, recordActivity } from '../src/forecast.ts'
 import { branchIn, findGitDir, type GitFs } from '../src/gitinfo.ts'
 import {
+  ACTIVITY_KEY,
   SNAPSHOT_KEY,
   chooseSnapshot,
   configDirFrom,
@@ -11,7 +13,7 @@ import {
   toPayload,
 } from '../src/live.ts'
 import { MAX_FILE_BYTES, isValidSession, parseRun, progressPath, type Run } from '../src/progress.ts'
-import type { Line } from '../src/render.ts'
+import type { LimitPick, Line } from '../src/render.ts'
 import { dateKey } from '../src/timefmt.ts'
 
 // How often the line refreshes with nothing else to prompt it: the duration
@@ -23,6 +25,7 @@ const MAX_SNAPSHOT_BYTES = 4096
 // Module state starts over on a reload; the first refresh refills it.
 let line: Line = []
 let effort: string | undefined
+let lastPick: LimitPick['show'] | undefined
 let running: Promise<void> | null = null
 let again = false
 
@@ -86,17 +89,35 @@ async function liveLine($: EngineInterface): Promise<Line> {
   const payload = toPayload({ usage, modelId, cwd, root, sessionId, nowMs, settings, effort })
 
   const fs: GitFs = { kind: path => kindOf($, path), read: path => readText($, path) }
-  const [configText, goSnapshot, stored, gitDir] = await Promise.all([
+  const [configText, goSnapshot, stored, storedActivity, gitDir] = await Promise.all([
     readSmall($, `${dir}/paceline.json`, MAX_CONFIG_BYTES),
     readSmall($, `${dir}/paceline-day.json`, MAX_SNAPSHOT_BYTES),
     $.store.get(SNAPSHOT_KEY),
+    $.store.get(ACTIVITY_KEY),
     findGitDir(fs, cwd),
   ])
   const [branch, run] = await Promise.all([branchIn(fs, gitDir), loadProgress($, gitDir, sessionId)])
 
   const config = configText === null ? defaultConfig() : parseConfig(configText)
   const snapshot = chooseSnapshot(goSnapshot, stored, dateKey(nowMs, 'local'), payload.rateLimits?.sevenDay)
-  const result = renderLive(payload, config, snapshot, branch, run, nowMs)
+  const recorded = recordActivity(
+    isActivity(storedActivity) ? storedActivity : null,
+    nowMs,
+    'local',
+    payload.rateLimits?.fiveHour?.usedPercentage,
+    payload.rateLimits?.sevenDay?.usedPercentage,
+  )
+  if (recorded.changed) await $.store.set(ACTIVITY_KEY, recorded.activity)
+
+  const result = renderLive(payload, config, {
+    snapshot,
+    branch,
+    run,
+    activity: recorded.activity,
+    nowMs,
+    previous: lastPick,
+  })
+  lastPick = result.pick?.show
   if (result.save) await $.store.set(SNAPSHOT_KEY, result.save)
   return result.line
 }
