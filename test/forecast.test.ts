@@ -21,12 +21,13 @@ function nineToFive(nowMs: number, days: number): Activity {
   return record
 }
 
-/** Every hour active on each of `days` days before `nowMs`, and today so far. */
+/** Every hour active on each of `days` days before `nowMs`, and today up to now. */
 function aroundTheClock(nowMs: number, days: number): Activity {
   const record: Activity = { days: {} }
-  for (let i = 0; i <= days; i++) {
+  for (let i = 1; i <= days; i++) {
     record.days[dateKey(nowMs - i * 24 * HOUR, 'utc')] = { seen: 0xffffff, active: 0xffffff }
   }
+  record.days[dateKey(nowMs, 'utc')] = { seen: 0xffffff, active: (1 << new Date(nowMs).getUTCHours()) - 1 }
   return record
 }
 
@@ -45,6 +46,13 @@ describe('recordActivity', () => {
     expect(rose.changed).toBe(true)
     expect(rose.activity.days['20261007'].active).toBe(1 << 14)
     expect(rose.activity.last?.changedAtMs).toBe(t + 120_000)
+  })
+
+  test('adds up the weekly points gained in a day', () => {
+    const a = recordActivity(null, t, 'utc', 10, 50).activity
+    const b = recordActivity(a, t + 60_000, 'utc', 12, 53).activity
+    const c = recordActivity(b, t + 120_000, 'utc', 13, 55).activity
+    expect(c.days['20261007'].spent).toBe(5)
   })
 
   test('a window resetting is not use', () => {
@@ -111,6 +119,26 @@ describe('forecastLimits', () => {
     expect(pick?.show).toBe('week')
     expect(pick?.outAt).toBeGreaterThan(sec('2026-10-08T21:00:00Z'))
     expect(pick?.outAt).toBeLessThan(sec('2026-10-08T23:00:00Z'))
+  })
+
+  test('two hard days then a relaxed one does not project the hard days forward', () => {
+    const now = at('2026-10-07T15:00:00Z')
+    const activity = nineToFive(now, 3)
+    // 24 points a day for the two hard days, 4 today over 3 active hours.
+    activity.days[dateKey(now - 24 * HOUR, 'utc')].spent = 4
+    activity.days[dateKey(now - 2 * 24 * HOUR, 'utc')].spent = 24
+    activity.days[dateKey(now - 3 * 24 * HOUR, 'utc')].spent = 24
+    activity.days['20261007'] = { seen: 0xffffff, active: 0b111 << 10 }
+    activity.last = { session: 5, week: 52, changedAtMs: now - 60 * 60_000 }
+    const pick = forecastLimits({
+      nowMs: now,
+      zone: 'utc',
+      session: { usedPercentage: 5, resetsAt: sec('2026-10-07T19:00:00Z') },
+      week: { usedPercentage: 52, resetsAt: sec('2026-10-11T07:00:00Z') },
+      activity,
+      weekAtDayStart: 48,
+    })
+    expect(pick?.outAt).toBeUndefined()
   })
 
   test('a heavy session runs out within the hour and wins', () => {

@@ -43,8 +43,16 @@ const PRIOR = 0.25
 /** With no history, a week's use is spread over at least this many hours. */
 const MIN_FALLBACK_HOURS = 3
 
-/** Which hours of a day had readings, and which saw usage go up, as 24-bit masks. */
-export type DayActivity = { seen: number; active: number }
+/** A day with this many active hours counts in full toward the burn rate. */
+const RATE_FULL_HOURS = 4
+/** The burn rate needs at least this much day weight behind it. */
+const MIN_RATE_WEIGHT = 0.25
+
+/**
+ * Which hours of a day had readings, and which saw usage go up, as 24-bit
+ * masks, plus the weekly points spent that day.
+ */
+export type DayActivity = { seen: number; active: number; spent?: number }
 
 /** What the mod remembers between refreshes, in its store. */
 export type Activity = {
@@ -93,7 +101,9 @@ export function recordActivity(
     (week !== undefined && last?.week !== undefined && week > last.week)
 
   const day = days[key] ?? { seen: 0, active: 0 }
+  const gained = week !== undefined && last?.week !== undefined && week > last.week ? week - last.week : 0
   const next: DayActivity = { seen: day.seen | h, active: rose ? day.active | h : day.active }
+  if (day.spent !== undefined || gained > 0) next.spent = (day.spent ?? 0) + gained
   days[key] = next
 
   // Keep only the newest days.
@@ -106,6 +116,7 @@ export function recordActivity(
     !prev ||
     next.seen !== day.seen ||
     next.active !== day.active ||
+    next.spent !== day.spent ||
     session !== last?.session ||
     week !== last?.week ||
     keys.length > KEEP_DAYS
@@ -136,6 +147,48 @@ function activeHoursBetween(a: Activity | null, fromMs: number, toMs: number, zo
     if (day && (day.active & bit(hourOf(t, zone))) !== 0) hours++
   }
   return hours
+}
+
+const countBits = (mask: number) => {
+  let n = 0
+  for (let m = mask >>> 0; m !== 0; m &= m - 1) n++
+  return n
+}
+
+/**
+ * Points per active hour, averaged over the recorded days with the newest
+ * counting most: a day's weight halves for each day back, and a day with few
+ * active hours counts for less. One hard day followed by a relaxed one then
+ * pulls the rate down instead of projecting the hard day forward. Returns
+ * undefined until a day on record has both points spent and active hours.
+ */
+function recentRate(
+  a: Activity | null,
+  nowMs: number,
+  zone: Zone,
+  spentToday: number | undefined,
+): number | undefined {
+  const today = dateKey(nowMs, zone)
+  let weighted = 0
+  let weight = 0
+  for (const [key, d] of Object.entries(a?.days ?? {})) {
+    const spent = key === today && spentToday !== undefined ? spentToday : d.spent
+    const hours = countBits(d.active)
+    if (spent === undefined || spent <= 0 || hours === 0) continue
+    const ageDays = Math.max(0, Math.round((startOfDay(nowMs, zone) - dayStartOf(key, zone)) / (24 * HOUR)))
+    const w = 0.5 ** ageDays * Math.min(hours, RATE_FULL_HOURS) / RATE_FULL_HOURS
+    weighted += (spent / hours) * w
+    weight += w
+  }
+  return weight >= MIN_RATE_WEIGHT ? weighted / weight : undefined
+}
+
+/** Epoch ms of the start of the day a `yyyymmdd` key names. */
+function dayStartOf(key: string, zone: Zone): number {
+  const y = Number(key.slice(0, 4))
+  const m = Number(key.slice(4, 6)) - 1
+  const d = Number(key.slice(6, 8))
+  return zone === 'utc' ? Date.UTC(y, m, d) : new Date(y, m, d).getTime()
 }
 
 type Projection = {
@@ -219,8 +272,11 @@ export function forecastLimits(input: ForecastInput): LimitPick | null {
   const todayActive = activeHoursBetween(activity, todayStart, nowMs, zone)
   const spentToday = input.weekAtDayStart === undefined ? undefined : weekUsed - input.weekAtDayStart
   const weekActive = activeHoursBetween(activity, Math.max(weekStart, nowMs - WEEK_MS), nowMs, zone)
+  const recent = recentRate(activity, nowMs, zone, spentToday)
   let weekRate: number
-  if (spentToday !== undefined && spentToday > 0 && todayActive >= MIN_RATE_HOURS) {
+  if (recent !== undefined) {
+    weekRate = recent
+  } else if (spentToday !== undefined && spentToday > 0 && todayActive >= MIN_RATE_HOURS) {
     weekRate = spentToday / todayActive
   } else if (weekActive >= MIN_RATE_HOURS) {
     weekRate = weekUsed / weekActive
