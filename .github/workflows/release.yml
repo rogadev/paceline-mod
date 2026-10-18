@@ -30,7 +30,7 @@ jobs:
         with:
           node-version: 24
       # The release re-runs the checks on the exact commit it ships.
-      - run: npm install --global --ignore-scripts @anthropic-ai/claude-code@2.1.302
+      - run: npm install --global @anthropic-ai/claude-code@2.1.302
       - run: claude plugin validate .
       - run: claude plugin test .
       - name: Tag and release a new version
