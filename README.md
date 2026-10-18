@@ -2,6 +2,9 @@
 
 A Claude Code mod that paces your usage limits and shows, at a glance, where every session stands, in a line above the prompt.
 
+![paceline in ten states: a fresh day, working through the day, most of the budget used, over budget, a week forecast to run out, a session running low, the last day, an agent job, verbose with counting down and fast mode, and both limits](docs/paceline-states.svg)
+
+Colors follow your terminal's palette, with fixed colors for the project name and for red. See [every state](#every-state) for what each one means.
 ```
 paceline (dev) · Opus 5.5 · high · Today: ▕██████░░░░░░░░│ 8/14 · w 43/100 · 4d left · 59m
 ```
@@ -58,6 +61,25 @@ The bar has one cell per weekly point, against a `│` marker at the even daily 
 - A bar longer than 28 cells scales down to fit, marker included.
 
 **Project colors** come from a hash of the project folder name, mapped to one of 12 evenly spaced hues in the OKLCH color space, so every color is equally bright. A project keeps its color everywhere, including its subfolders, and it's the same color the Go paceline gives it.
+
+### Every state
+
+The image above shows the line as it draws, in color, for the states you'll see most. Each one in turn:
+
+| State | What you see | Why |
+|---|---|---|
+| Fresh day | A full bar past the `│` marker, `0/29 +15 saved` | Nothing spent yet, and the week is running light, so the day's budget is above the even share. |
+| Working through the day | The bar shortens, `7/29` in green | Spent points drain the bar. Green while you have room. |
+| Most of the budget used | `22/29` in yellow, the bar mostly drained | Yellow past 70% of the budget, red past 85%. |
+| Over budget | A red bar and `41/29 → 24 tmrw` | The overage is counted, and tomorrow's budget shrinks to match. |
+| Week forecast to run out | `w 62/100 · out ~Sat` | At your recent pace the week ends before it resets. The warning replaces the days left. |
+| Session running low | `s 72% · out ~10:15am` in red | The session segment is off by default; once it's on, a session forecast to run out says when. |
+| The last day | `78/100 · last day` | The budget is everything left in the week. |
+| Agent job | `orc ▰▰▰▱▱ #43 2/5`, and `ctx 74%` | A long job's progress, and the context warning from 70% full. |
+| Verbose, counting down, fast mode | `max effort · fast mode`, `22/29 left`, `week 89/100 left` | `verbose` and `countDirection` in [`paceline.json`](#configuration); fast mode comes from your settings. |
+| Both limits | `s 22%` next to the week, no `out ~` | `"limits": "both"` skips the forecast and shows the line as the Go paceline does. |
+
+The image is generated from the mod's own renderer with fixed figures, so it can't drift from what the code draws. In a terminal with colors turned off, the same text prints without color.
 
 ### Run-out warnings
 
