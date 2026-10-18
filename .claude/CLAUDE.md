@@ -60,4 +60,5 @@ The user judges changes by seeing them, so try every change live before committi
 - Work on `dev`. `main` and `dev` both start at the first commit. Push to `dev`, then stop: don't watch CI or open a PR unless asked.
 - Conventional commit subjects (`feat:`, `fix:`, `docs:`, `test:`) that name the change, not the process. No attribution lines.
 - The version is in `.claude-plugin/plugin.json`. A user on a marketplace install gets a new version only when it changes, so bump it with every release.
-- No CI yet. Adding it means installing Claude Code in GitHub Actions to run `claude plugin validate` and `claude plugin test`.
+- CI (`.github/workflows/ci.yml`) runs `claude plugin validate` and `claude plugin test`, and on a pull request fails when `src/`, `hooks/`, or the manifests changed without a new version. It skips `tsc`, which needs the engine's generated types. The `ci-ok` job is the one check to require on `main`.
+- Releasing: merge to `main` with a bumped version. `.github/workflows/release.yml` tags `v<version>` and creates a GitHub release with generated notes when that tag doesn't exist yet. Marketplace installs see the update from the version in `plugin.json`, not from the tag.

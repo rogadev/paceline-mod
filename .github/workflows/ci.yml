@@ -1,0 +1,80 @@
+name: CI
+
+# Runs on every push to dev and every pull request into main. The single
+# `ci-ok` job passes only when every job below passes, so it is the one check
+# to require on main. Type checking is not run here: `tsc` needs the engine's
+# generated types, which only an interactive session writes.
+
+on:
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plugin:
+    name: validate and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      # Pinned to the version the mod is developed against. Its postinstall
+      # fetches the native binary, so install scripts must run.
+      - run: npm install --global @anthropic-ai/claude-code@2.1.302
+      - run: claude plugin validate .
+      - run: claude plugin test .
+
+  version:
+    name: version bump
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # Marketplace installs update only when the version changes, so a change
+      # to what the mod does has to carry a new one.
+      - name: Require a new version when the mod's code changed
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if git diff --quiet "$BASE_SHA" "$HEAD_SHA" -- src hooks .claude-plugin/plugin.json .claude-plugin/marketplace.json; then
+            echo "No mod code changed."
+            exit 0
+          fi
+          old=$(git show "$BASE_SHA:.claude-plugin/plugin.json" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version")
+          new=$(git show "$HEAD_SHA:.claude-plugin/plugin.json" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version")
+          echo "version: $old -> $new"
+          if [ "$old" = "$new" ]; then
+            echo "The mod changed but .claude-plugin/plugin.json still says $old. Bump it."
+            exit 1
+          fi
+
+  ci-ok:
+    name: ci-ok
+    if: always()
+    needs: [plugin, version]
+    runs-on: ubuntu-latest
+    steps:
+      - name: All required jobs passed
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "results: $RESULTS"
+          for r in $RESULTS; do
+            case "$r" in success|skipped) ;; *) exit 1 ;; esac
+          done

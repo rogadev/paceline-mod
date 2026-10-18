@@ -169,11 +169,16 @@ describe('live adapter', () => {
     // Neither limit runs out, so neither warns; the session ends its window
     // closer to 100%.
     expect(pick).toEqual({ show: 'session' })
-    // A 32-point budget is longer than the bar's 28 cells, so it scales down,
-    // marker included.
-    const bar = '\u2595' + '\u2588'.repeat(12) + '\u2502' + '\u2588'.repeat(16) + '\u258f'
-    expect(toAnsi(line, true)).toBe(
-      `techcentral (dev) \u00b7 Opus 5.5 \u00b7 high \u00b7 Today: ${bar} 0/32 +18 saved \u00b7 w 4/100 \u00b7 3d left \u00b7 ctx 72% \u00b7 16m`,
+    // The budget is longer than the bar's 28 cells, so the bar scales down,
+    // marker included. Where the marker falls, and the budget and savings
+    // figures, depend on the local time of day, which follows the time zone
+    // the test runs in. So check the bar's shape and the rest of the line.
+    const text = toAnsi(line, true)
+    const bar = /\u2595(\u2588*)\u2502(\u2588*)\u258f/.exec(text)
+    expect(bar).not.toBe(null)
+    expect(bar![1].length + bar![2].length).toBe(28)
+    expect(text.replace(bar![0], 'BAR').replace(/ 0\/\d+ \+\d+ saved/, ' BUDGET')).toBe(
+      'techcentral (dev) \u00b7 Opus 5.5 \u00b7 high \u00b7 Today: BAR BUDGET \u00b7 w 4/100 \u00b7 3d left \u00b7 ctx 72% \u00b7 16m',
     )
   })
 

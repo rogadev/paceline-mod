@@ -1,0 +1,46 @@
+name: Release
+
+# Every push to main reads the version in .claude-plugin/plugin.json. When no
+# tag exists for it yet, the run tags the commit and creates a GitHub release
+# with generated notes. The same version is what tells marketplace installs
+# that an update exists; the tag and release are the changelog.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # tag and GitHub release
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+      # The release re-runs the checks on the exact commit it ships.
+      - run: npm install --global @anthropic-ai/claude-code@2.1.302
+      - run: claude plugin validate .
+      - run: claude plugin test .
+      - name: Tag and release a new version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(node -p "require('./.claude-plugin/plugin.json').version")
+          tag="v$version"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+            echo "$tag already released; nothing to do."
+            exit 0
+          fi
+          gh release create "$tag" --target "$GITHUB_SHA" --title "$tag" --generate-notes
