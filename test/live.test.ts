@@ -191,9 +191,12 @@ describe('live adapter', () => {
     // points spent today, 40 points left, and two days to the reset.
     const now = Date.parse('2026-10-07T12:00:00Z')
     const activity: Activity = { days: {}, last: { session: 20, week: 60, changedAtMs: now - 60_000 } }
-    for (let i = 0; i <= 7; i++) {
+    for (let i = 1; i <= 7; i++) {
       activity.days[dateKey(now - i * 24 * 3600_000, 'local')] = { seen: 0xffffff, active: 0xffffff }
     }
+    // Today so far: twelve active hours, counted in the zone the line renders in.
+    const localHour = new Date(now).getHours()
+    activity.days[dateKey(now, 'local')] = { seen: 0xffffff, active: (1 << localHour) - 1 }
     const weekReset = '2026-10-09T12:00:00Z'
     const p = toPayload({
       ...figures,
