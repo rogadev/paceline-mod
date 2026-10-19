@@ -9,6 +9,7 @@ import {
   SNAPSHOT_KEY,
   chooseSnapshot,
   configDirFrom,
+  debugReport,
   renderLive,
   toPayload,
 } from '../src/live.ts'
@@ -21,11 +22,14 @@ import { dateKey } from '../src/timefmt.ts'
 const REFRESH_MS = 15_000
 const MAX_CONFIG_BYTES = 64 * 1024
 const MAX_SNAPSHOT_BYTES = 4096
+const DEBUG_TOOL = 'mcp__paceline__get_forecast_debug'
+const DEBUG_COMMAND = 'paceline-debug'
 
 // Module state starts over on a reload; the first refresh refills it.
 let line: Line = []
 let effort: string | undefined
 let lastPick: LimitPick['show'] | undefined
+let lastDebug: unknown
 let running: Promise<void> | null = null
 let again = false
 
@@ -109,13 +113,22 @@ async function liveLine($: EngineInterface): Promise<Line> {
   )
   if (recorded.changed) await $.store.set(ACTIVITY_KEY, recorded.activity)
 
-  const result = renderLive(payload, config, {
+  const state = {
     snapshot,
     branch,
     run,
     activity: recorded.activity,
     nowMs,
     previous: lastPick,
+  }
+  const result = renderLive(payload, config, state)
+  lastDebug = debugReport({
+    nowMs,
+    payload,
+    config,
+    state,
+    snapshotSource: snapshot === null ? 'none' : snapshot === stored ? 'store' : 'go-file',
+    result,
   })
   lastPick = result.pick?.show
   if (result.save) await $.store.set(SNAPSHOT_KEY, result.save)
@@ -161,7 +174,27 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await refresh($)
     $.clock.every(REFRESH_MS, () => refresh($))
+    await $.tool.register({
+      name: 'get_forecast_debug',
+      description:
+        "Returns, as JSON, every figure behind paceline's forecast and its 'out ~time' warning: the usage readings, the day snapshot, the stored activity history, the burn rates and where they came from, and each limit's projection. Call it when asked why the line shows what it shows. Read-only.",
+    })
+    await $.command.register({
+      name: DEBUG_COMMAND,
+      description: "Prints the figures behind paceline's forecast.",
+    })
     return next(e)
+  })
+
+  // The debug tool and command answer from the latest refresh, redone first so
+  // the figures are current.
+  on('tool.call', { tool: DEBUG_TOOL }, async ($, e, next) => {
+    await refresh($)
+    return { result: JSON.stringify(lastDebug ?? { note: 'No reading yet.' }, null, 2) }
+  })
+  on('command.run', { command: DEBUG_COMMAND }, async ($, e, next) => {
+    await refresh($)
+    return { text: JSON.stringify(lastDebug ?? { note: 'No reading yet.' }, null, 2) }
   })
 
   // Usage moved: a turn ended, or a rate-limit window moved a whole point.
