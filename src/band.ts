@@ -23,6 +23,10 @@ const SURFACE_TONES: Record<string, string> = { green: '#2e9e44', yellow: '#c99a
 // look and stays readable on light backgrounds too.
 const DIM = { color: '#767676' }
 
+// Claude Code indents its own rows under the prompt (the status line, the
+// mode line) two columns from the edge; the band lines up with them.
+const TERMINAL_INDENT = 2
+
 function textProps(tone: Tone, surface: RenderSurface): Record<string, unknown> {
   if (tone === 'plain') return {}
   if (tone === 'dim') return DIM
@@ -41,6 +45,7 @@ export function bandTree(line: Line, el: BandElements, surface: RenderSurface): 
   return el.Box({
     flexDirection: 'row',
     flexWrap: 'wrap',
+    ...(surface === 'terminal' ? { paddingLeft: TERMINAL_INDENT } : {}),
     children: line.map((segment, i) =>
       el.Box({
         flexDirection: 'row',

@@ -10,8 +10,10 @@
 
 import type { SessionRateLimit, SessionUsage } from 'claude-code'
 
+import type { BatchState } from './batch.ts'
 import type { Config } from './config.ts'
 import { explainForecast, type Activity, type ForecastTrace } from './forecast.ts'
+import type { LoopFile } from './loop.ts'
 import { modelName } from './model.ts'
 import { isValidSnapshot, type Snapshot } from './pace.ts'
 import type { Limit, Payload } from './payload.ts'
@@ -20,8 +22,15 @@ import { render, type Line, type LimitPick } from './render.ts'
 
 /** Where this mod keeps today's budget snapshot in its `$.store`. */
 export const SNAPSHOT_KEY = 'day'
-/** Where this mod keeps its record of active hours, for the forecast. */
-export const ACTIVITY_KEY = 'activity'
+/**
+ * Where this mod keeps its record of active hours, for the forecast. Builds
+ * before 0.4.1 used `activity` and counted an idle session's older reading
+ * as use; they may still be running, so this build leaves that key to them
+ * and keeps its own.
+ */
+export const ACTIVITY_KEY = 'activity-v2'
+/** The key builds before 0.4.1 wrote, read once to carry the hour history over. */
+export const LEGACY_ACTIVITY_KEY = 'activity'
 
 /** What the session reported for one refresh. */
 export type Figures = {
@@ -118,6 +127,10 @@ export type LiveState = {
   snapshot: Snapshot | null
   branch: string
   run: Run | null
+  /** The repository's `/orc-loop` state file, or null. */
+  loop: LoopFile | null
+  /** The repository's dev -> main review batch, or null when the segment doesn't apply or isn't known yet. */
+  batch: BatchState | null
   activity: Activity | null
   nowMs: number
   /** The limit the forecast picked last time, so a near tie doesn't flip it. */
@@ -159,6 +172,8 @@ export function renderLive(
     },
     branch: () => state.branch,
     progress: () => state.run,
+    loop: () => state.loop,
+    batch: () => state.batch,
     compact: true,
     limits: pick ?? undefined,
   })

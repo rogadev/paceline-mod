@@ -3,8 +3,8 @@ import { describe, expect, test } from 'claude-code/testing'
 
 import { bandTree, type BandElements } from '../src/band.ts'
 import { defaultConfig, parseConfig } from '../src/config.ts'
-import { branchIn, findGitDir, type GitFs } from '../src/gitinfo.ts'
 import { chooseSnapshot, configDirFrom, renderLive, toLimit, toPayload } from '../src/live.ts'
+import { decodeLoopState } from '../src/loop.ts'
 import { modelName } from '../src/model.ts'
 import { render, toAnsi } from '../src/render.ts'
 import type { Activity } from '../src/forecast.ts'
@@ -22,46 +22,6 @@ describe('modelName', () => {
     ['claude-unknown-1', 'claude-unknown-1'],
   ]
   for (const [id, want] of cases) test(id, () => expect(modelName(id)).toBe(want))
-})
-
-function fakeFs(files: Record<string, string>, dirs: string[]): GitFs {
-  return {
-    kind: async path => (path in files ? 'file' : dirs.includes(path) ? 'dir' : null),
-    read: async path => files[path] ?? null,
-  }
-}
-
-describe('git branch', () => {
-  test('walks up to the repository and reads the branch', async () => {
-    const fs = fakeFs({ 'C:/r/app/.git/HEAD': 'ref: refs/heads/dev\n' }, ['C:/r/app/.git'])
-    const gitDir = await findGitDir(fs, 'C:\\r\\app\\src\\deep')
-    expect(gitDir).toBe('C:/r/app/.git')
-    expect(await branchIn(fs, gitDir)).toBe('dev')
-  })
-
-  test('follows a worktree .git file', async () => {
-    const fs = fakeFs(
-      { '/w/tree/.git': 'gitdir: /r/app/.git/worktrees/tree\n', '/r/app/.git/worktrees/tree/HEAD': 'ref: refs/heads/feat/x' },
-      [],
-    )
-    const gitDir = await findGitDir(fs, '/w/tree')
-    expect(gitDir).toBe('/r/app/.git/worktrees/tree')
-    expect(await branchIn(fs, gitDir)).toBe('feat/x')
-  })
-
-  test('shows a detached head and caps a long branch', async () => {
-    const sha = 'a'.repeat(40)
-    expect(await branchIn(fakeFs({ '/g/HEAD': sha }, []), '/g')).toBe('detached aaaaaaa')
-    const long = await branchIn(fakeFs({ '/g/HEAD': 'ref: refs/heads/' + 'b'.repeat(40) }, []), '/g')
-    expect(long).toBe('b'.repeat(31) + '\u2026')
-  })
-
-  test('outside a repository there is no branch', async () => {
-    const fs = fakeFs({}, [])
-    expect(await findGitDir(fs, 'C:/nowhere/at/all')).toBe('')
-    expect(await findGitDir(fs, '/nowhere')).toBe('')
-    expect(await branchIn(fs, '')).toBe('')
-  })
 })
 
 describe('config', () => {
@@ -84,6 +44,14 @@ describe('config', () => {
     expect(c.limits).toBe('auto')
     expect(parseConfig('{"limits": "both"}').limits).toBe('both')
     expect(parseConfig('{"limits": "sideways"}').limits).toBe('auto')
+  })
+
+  test('turns the loop and batch segments on by default, each with its own key', () => {
+    expect(defaultConfig().segments.loop).toBe(true)
+    expect(defaultConfig().segments.batch).toBe(true)
+    const c = parseConfig('{"segments": {"batch": false}}')
+    expect(c.segments.batch).toBe(false)
+    expect(c.segments.loop).toBe(true)
   })
 
   test('a broken file or a section of the wrong type gives the defaults', () => {
@@ -160,7 +128,28 @@ describe('live adapter', () => {
     expect(toLimit(undefined)).toBe(undefined)
   })
 
-  const state = { snapshot: null, branch: 'dev', run: null, activity: null, nowMs }
+  const state = { snapshot: null, branch: 'dev', run: null, activity: null, nowMs, batch: null, loop: null }
+
+  test('draws the loop and batch before the duration, and drops each when toggled off', () => {
+    const loop = decodeLoopState(
+      JSON.stringify({ phase: 'build', inFlight: 44, issues: [{ n: 43, status: 'done' }, { n: 44, status: 'pending' }] }),
+    )
+    const withBoth = {
+      ...state,
+      loop: loop && { state: loop, mtimeMs: nowMs - 60_000 },
+      batch: { commits: 3, issues: 7, reviews: [], sinceLastReview: 0 as const },
+    }
+    const tail = ' \u00b7 loop \u25b0\u25b0 #44 1/2 \u00b7 7 issues \u00b7 no review yet \u00b7 16m'
+    expect(toAnsi(renderLive(toPayload(figures), defaultConfig(), withBoth).line, true).endsWith(tail)).toBe(true)
+
+    const off = defaultConfig()
+    off.segments.loop = false
+    off.segments.batch = false
+    const plain = toAnsi(renderLive(toPayload(figures), off, withBoth).line, true)
+    expect(plain.endsWith(' \u00b7 ctx 72% \u00b7 16m')).toBe(true)
+    expect(plain.includes('loop')).toBe(false)
+    expect(plain.includes('issues')).toBe(false)
+  })
 
   test('renders the whole line, compact, and anchors today', () => {
     const p = toPayload(figures)
@@ -278,5 +267,12 @@ describe('band', () => {
     }
     expect(color('terminal')).toBe('cyan')
     expect(color('desktop')).toBe('#2f9fbf')
+  })
+
+  test('the terminal indents the band to line up with the rows under the prompt', () => {
+    const pad = (surface: 'terminal' | 'desktop') =>
+      (bandTree(line, el, surface) as unknown as Node).props.paddingLeft
+    expect(pad('terminal')).toBe(2)
+    expect(pad('desktop')).toBeUndefined()
   })
 })

@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'claude-code/testing'
 
+import type { BatchState } from '../src/batch.ts'
 import { defaultConfig, type Config } from '../src/config.ts'
+import { decodeLoopState, type LoopFile } from '../src/loop.ts'
 import type { Snapshot } from '../src/pace.ts'
 import { decodePayload } from '../src/payload.ts'
 import type { Run } from '../src/progress.ts'
@@ -179,6 +181,44 @@ describe('compact layout', () => {
         DOT,
       ),
     )
+  })
+
+  describe('loop and batch', () => {
+    const loopFile: LoopFile = {
+      state: decodeLoopState(
+        JSON.stringify({ phase: 'build', inFlight: 44, issues: [{ n: 43, status: 'done' }, { n: 44, status: 'pending' }] }),
+      )!,
+      mtimeMs: NOW - 60_000,
+    }
+    const batchState: BatchState = { commits: 3, issues: 7, reviews: [], sinceLastReview: 0 }
+    const LOOP = 'loop ' + FULL + FULL + ' #44 1/2'
+    const BATCH = '7 issues' + DOT + 'no review yet'
+    const inputs: Partial<RenderContext> = { loop: () => loopFile, batch: () => batchState }
+
+    test('sit after the other segments and before the duration, loop first', () => {
+      expect(text(compact({}, defaultConfig(), undefined, inputs))).toBe(
+        [...HEAD, TODAY, ...WEEK, LOOP, BATCH, '59m'].join(DOT),
+      )
+    })
+
+    test('each turns off with its own toggle', () => {
+      const noLoop = defaultConfig()
+      noLoop.segments.loop = false
+      expect(text(compact({}, noLoop, undefined, inputs))).toBe([...HEAD, TODAY, ...WEEK, BATCH, '59m'].join(DOT))
+      const noBatch = defaultConfig()
+      noBatch.segments.batch = false
+      expect(text(compact({}, noBatch, undefined, inputs))).toBe([...HEAD, TODAY, ...WEEK, LOOP, '59m'].join(DOT))
+    })
+
+    test('draw nothing when there is no loop or batch', () => {
+      const none: Partial<RenderContext> = { loop: () => null, batch: () => null }
+      expect(text(compact({}, defaultConfig(), undefined, none))).toBe([...HEAD, TODAY, ...WEEK, '59m'].join(DOT))
+    })
+
+    test('the Go layout never draws them', () => {
+      const ctx = { nowMs: NOW, zone: 'utc' as const, config: defaultConfig(), readSnapshot: () => SNAPSHOT }
+      expect(toAnsi(render(payload(), { ...ctx, ...inputs }))).toBe(toAnsi(render(payload(), ctx)))
+    })
   })
 
   test('the Go layout ignores a pick', () => {
