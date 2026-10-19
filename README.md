@@ -2,7 +2,7 @@
 
 A Claude Code mod that paces your usage limits and shows, at a glance, where every session stands, in a line above the prompt.
 
-![paceline in ten states: a fresh day, working through the day, most of the budget used, over budget, a week forecast to run out, a session running low, the last day, an agent job, verbose with counting down and fast mode, and both limits](docs/paceline-states.svg)
+![paceline in thirteen states: a fresh day, working through the day, the session time, most of the budget used, over budget, over budget by a whole day, a week forecast to run out, a session running low, the last day, an agent job, an /orc-loop run with its review batch, verbose with counting down and fast mode, and both limits](docs/paceline-states.svg)
 
 Colors follow your terminal's palette, with fixed colors for the project name and for red. See [every state](#every-state) for what each one means.
 ```
@@ -72,16 +72,19 @@ The image above shows the line as it draws, in color, for the states you'll see 
 |---|---|---|
 | Fresh day | A full bar up to the `│` marker, `0/14` | Nothing spent yet, and the week is on pace, so the day's budget is the even share of about 14 points. |
 | Working through the day | The bar drains, `5/14` in green | Spent points drain the bar. Green while you have room. |
+| Session time | `2h12m` at the end of the line | How long this session has been running. It counts up as you work, from `2m` to `5h22m` and beyond. |
 | Most of the budget used | `11/14` in yellow, the bar mostly drained | Yellow past 70% of the budget, red past 85%. |
 | Over budget | A red bar and `17/14 → 13 tmrw` | The overage is counted, and tomorrow's budget shrinks to match. |
+| Over budget by a whole day | A full red bar and `28/14 → 7 tmrw` | Twice the day's budget is spent, so tomorrow gets about half a day. |
 | Week forecast to run out | `w 67/100 · out ~Fri` | At your recent pace the week ends before it resets. The warning replaces the days left. |
 | Session running low | `s 72% · out ~10:15am` in red | The session segment is off by default; once it's on, a session forecast to run out says when. |
-| The last day | `1/14 · w 87/100 · last day` | The budget is everything left in the week. |
-| Agent job | `orc ▰▰▰▱▱ #43 40%`, and `ctx 74%` | A long job's progress, and the context warning from 70% full. |
+| The last day | `6/40 +20 saved · last day` | The budget is everything left in the week. With plenty left, this is the day to spend it if you need to. |
+| Agent job | `loop ▰▰▰▱▱ #43 40%`, and `ctx 74%` | A long job's progress, from a regular loop or any agent that reports it, and the context warning from 70% full. See [Progress bar](#progress-bar). |
+| An `/orc-loop` run and its review batch | `loop ▰▰▰▱▱ #44 2/5` and `7 issues · 2 reviews · ✓ ready` | [orc-pack](https://github.com/rogadev/orc-pack)'s `/orc-loop` shows one cell per issue, and the batch shows where the dev -> main batch stands in review. See [Loop and batch](#loop-and-batch). |
 | Verbose, counting down, fast mode | `max effort · fast mode`, `8/14 left`, `week 36/100 left` | `verbose` and `countDirection` in [`paceline.json`](#configuration); fast mode comes from your settings. |
 | Both limits | `s 22%` next to the week, no `out ~` | `"limits": "both"` skips the forecast and shows the line as the Go paceline does. |
 
-The image is generated from the mod's own renderer with fixed figures by `node docs/gallery/render.mts` (Node 23.6 or later), so it matches what the code draws; run it again after changing what a segment shows. In a terminal with colors turned off, the same text prints without color.
+The underlines and arrows in the image point at the part of the line each state is about; the arrows show the bar draining as you spend and filling with red past the budget. The image is generated from the mod's own renderer with fixed figures by `node docs/gallery/render.mts` (Node 23.6 or later), so it matches what the code draws; run it again after changing what a segment shows. In a terminal with colors turned off, the same text prints without color.
 
 ### Run-out warnings
 
@@ -137,7 +140,7 @@ The budget is anchored at the first reading of each day. The mod keeps that anch
 
 ## Progress bar
 
-When an agent works through a long job on its own, paceline shows how far along it is:
+When an agent works through a long job on its own, such as a regular loop over a list of tasks, paceline shows how far along it is:
 
 ```
 loop ▰▰▰▰▱ #44 3/5          one cell per step: done, active, skipped, blocked, pending
@@ -145,13 +148,15 @@ orc ▰▰▱▱ #42 review 55%     a planned run: weighted percentage, moving w
 loop ▰▰▰ ✓ done             finished; hidden 30 minutes later
 ```
 
+Any agent can report a run, under any name. [orc-pack](https://github.com/rogadev/orc-pack) uses it too: `/orc` reports the tasks of each run, and `/orc-loop` reports its batch of issues (orc-pack 1.14.0 and later), so both show here as they work.
+
 The mod reads the same progress files as the Go paceline: `.git/paceline/progress-<session id>.json` for this session's run, or `.git/paceline/progress.json` for a writer outside Claude Code. Agents write them through `paceline-mcp`, the MCP server that ships with [paceline](https://github.com/rogadev/paceline#let-agents-report-progress). The file format is documented there.
 
 ## Loop and batch
 
 Two segments the Go status line never had sit after the others, before the duration. Turn either off with `segments.loop` or `segments.batch`.
 
-**Loop** draws an `/orc-loop` run from `<git dir>/orc-loop/state.json`: one cell per issue (green done, red blocked, dim skipped, cyan in flight, dim empty for the rest), then the phase.
+**Loop** draws a run of [orc-pack](https://github.com/rogadev/orc-pack)'s `/orc-loop` from `<git dir>/orc-loop/state.json`: one cell per issue (green done, red blocked, dim skipped, cyan in flight, dim empty for the rest), then the phase.
 
 ```
 loop ▰▰▰▱▱ #44 2/5          building issue 44, two of five settled

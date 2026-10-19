@@ -1,8 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="800" viewBox="0 0 1240 800" role="img" aria-labelledby="t d">
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="1140" viewBox="0 0 1240 1140" role="img" aria-labelledby="t d">
 <title id="t">paceline in its different states</title>
-<desc id="d">Fresh day, Working through the day, Most of the budget used, Over budget, Week forecast to run out, Session running low, The last day, Agent job in progress, Verbose, counting down, fast mode, Both limits, as the Go line.</desc>
+<desc id="d">Fresh day, Working through the day, Session time, Most of the budget used, Over budget, Over budget by a whole day, Week forecast to run out, Session running low, The last day, Agent job in progress, An /orc-loop run and its review batch, Verbose, counting down, fast mode, Both limits, as the Go line.</desc>
 <style>text{font-family:"Cascadia Mono",Consolas,"DejaVu Sans Mono",monospace;font-size:14px;white-space:pre}.t{fill:#f2f2f2;font-weight:bold;font-size:13px}.n{fill:#767676;font-size:12px}.b{font-weight:bold}</style>
-<rect width="1240" height="800" rx="8" fill="#0c0c0c"/>
+<defs><marker id="head" viewBox="0 0 8 8" refX="1" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L8 4L0 8z" fill="#e8c468"/></marker></defs>
+<rect width="1240" height="1140" rx="8" fill="#0c0c0c"/>
 <text x="24" y="34" class="t">Fresh day</text>
 <text x="24.0" y="60" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
 <text x="91.2" y="60" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
@@ -26,260 +27,379 @@
 <text x="645.6" y="60" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
 <text x="670.8" y="60" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
 <text x="729.6" y="60" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="754.8" y="60" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve">16m</text>
-<text x="24" y="80" class="n">The day starts with its budget, 14 points of the week; none of it is spent.</text>
-<text x="24" y="112" class="t">Working through the day</text>
-<text x="24.0" y="138" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
-<text x="91.2" y="138" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="99.6" y="138" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
-<text x="108.0" y="138" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
-<text x="133.2" y="138" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
-<text x="141.6" y="138" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="166.8" y="138" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
-<text x="234.0" y="138" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="259.2" y="138" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
-<text x="292.8" y="138" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="318.0" y="138" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
-<text x="368.4" y="138" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="376.8" y="138" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
-<text x="385.2" y="138" textLength="75.6" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">█████████</text>
-<text x="460.8" y="138" textLength="42.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░</text>
-<text x="502.8" y="138" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
-<text x="511.2" y="138" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="519.6" y="138" textLength="33.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">5/14</text>
-<text x="553.2" y="138" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="578.4" y="138" textLength="67.2" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">w 63/100</text>
-<text x="645.6" y="138" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="670.8" y="138" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
-<text x="729.6" y="138" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="754.8" y="138" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve">16m</text>
-<text x="24" y="158" class="n">Spent points drain the bar; green while there is room.</text>
-<text x="24" y="190" class="t">Most of the budget used</text>
-<text x="24.0" y="216" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
-<text x="91.2" y="216" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="99.6" y="216" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
-<text x="108.0" y="216" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
-<text x="133.2" y="216" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
-<text x="141.6" y="216" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="166.8" y="216" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
-<text x="234.0" y="216" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="259.2" y="216" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
-<text x="292.8" y="216" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="318.0" y="216" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
-<text x="368.4" y="216" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="376.8" y="216" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
-<text x="385.2" y="216" textLength="25.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">███</text>
-<text x="410.4" y="216" textLength="92.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░░░░░░░</text>
-<text x="502.8" y="216" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
-<text x="511.2" y="216" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="519.6" y="216" textLength="42.0" lengthAdjust="spacing" fill="#c19c00" xml:space="preserve">11/14</text>
-<text x="561.6" y="216" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="586.8" y="216" textLength="67.2" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">w 69/100</text>
-<text x="654.0" y="216" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="679.2" y="216" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
-<text x="738.0" y="216" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="763.2" y="216" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve">16m</text>
-<text x="24" y="236" class="n">Yellow past 70% of the budget, red past 85%.</text>
-<text x="24" y="268" class="t">Over budget</text>
-<text x="24.0" y="294" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
-<text x="91.2" y="294" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="99.6" y="294" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
-<text x="108.0" y="294" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
-<text x="133.2" y="294" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
-<text x="141.6" y="294" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="166.8" y="294" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
-<text x="234.0" y="294" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="259.2" y="294" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
-<text x="292.8" y="294" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="318.0" y="294" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
-<text x="368.4" y="294" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="376.8" y="294" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
-<text x="385.2" y="294" textLength="25.2" lengthAdjust="spacing" fill="#b92f2f" xml:space="preserve">███</text>
-<text x="410.4" y="294" textLength="92.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░░░░░░░</text>
-<text x="502.8" y="294" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
-<text x="511.2" y="294" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="519.6" y="294" textLength="42.0" lengthAdjust="spacing" fill="#b92f2f" xml:space="preserve">17/14</text>
-<text x="561.6" y="294" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="570.0" y="294" textLength="75.6" lengthAdjust="spacing" fill="#b92f2f" xml:space="preserve">→ 13 tmrw</text>
-<text x="645.6" y="294" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="670.8" y="294" textLength="67.2" lengthAdjust="spacing" fill="#c19c00" class="b" xml:space="preserve">w 75/100</text>
-<text x="738.0" y="294" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="763.2" y="294" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
-<text x="822.0" y="294" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="847.2" y="294" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve">16m</text>
-<text x="24" y="314" class="n">The overage turns red, and tomorrow's budget shrinks to match.</text>
-<text x="24" y="346" class="t">Week forecast to run out</text>
-<text x="24.0" y="372" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
-<text x="91.2" y="372" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="99.6" y="372" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
-<text x="108.0" y="372" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
-<text x="133.2" y="372" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
-<text x="141.6" y="372" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="166.8" y="372" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
-<text x="234.0" y="372" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="259.2" y="372" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
-<text x="292.8" y="372" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="318.0" y="372" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
-<text x="368.4" y="372" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="376.8" y="372" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
-<text x="385.2" y="372" textLength="42.0" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">█████</text>
-<text x="427.2" y="372" textLength="75.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░░░░░</text>
-<text x="502.8" y="372" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
-<text x="511.2" y="372" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="519.6" y="372" textLength="33.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">9/14</text>
-<text x="553.2" y="372" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="578.4" y="372" textLength="67.2" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">w 67/100</text>
-<text x="645.6" y="372" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="670.8" y="372" textLength="67.2" lengthAdjust="spacing" fill="#c19c00" xml:space="preserve">out ~Fri</text>
-<text x="738.0" y="372" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="763.2" y="372" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve">16m</text>
-<text x="24" y="392" class="n">At the current pace the week ends before it resets.</text>
-<text x="24" y="424" class="t">Session running low</text>
-<text x="24.0" y="450" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
-<text x="91.2" y="450" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="99.6" y="450" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
-<text x="108.0" y="450" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
-<text x="133.2" y="450" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
-<text x="141.6" y="450" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="166.8" y="450" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
-<text x="234.0" y="450" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="259.2" y="450" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
-<text x="292.8" y="450" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="318.0" y="450" textLength="42.0" lengthAdjust="spacing" fill="#c19c00" xml:space="preserve">s 72%</text>
-<text x="360.0" y="450" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="385.2" y="450" textLength="100.8" lengthAdjust="spacing" fill="#b92f2f" xml:space="preserve">out ~10:15am</text>
-<text x="486.0" y="450" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="511.2" y="450" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
-<text x="561.6" y="450" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="570.0" y="450" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
-<text x="578.4" y="450" textLength="75.6" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">█████████</text>
-<text x="654.0" y="450" textLength="42.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░</text>
-<text x="696.0" y="450" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
-<text x="704.4" y="450" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="712.8" y="450" textLength="33.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">5/14</text>
-<text x="746.4" y="450" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="771.6" y="450" textLength="67.2" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">w 63/100</text>
-<text x="838.8" y="450" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="864.0" y="450" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
-<text x="922.8" y="450" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="948.0" y="450" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve">16m</text>
-<text x="24" y="470" class="n">With the session segment on, its reset time becomes out ~10:15am, in red.</text>
-<text x="24" y="502" class="t">The last day</text>
-<text x="24.0" y="528" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
-<text x="91.2" y="528" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="99.6" y="528" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
-<text x="108.0" y="528" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
-<text x="133.2" y="528" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
-<text x="141.6" y="528" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="166.8" y="528" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
-<text x="234.0" y="528" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="259.2" y="528" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
-<text x="292.8" y="528" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="318.0" y="528" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
-<text x="368.4" y="528" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="376.8" y="528" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
-<text x="385.2" y="528" textLength="109.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">█████████████</text>
-<text x="494.4" y="528" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░</text>
-<text x="502.8" y="528" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
-<text x="511.2" y="528" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="519.6" y="528" textLength="33.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">1/14</text>
-<text x="553.2" y="528" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="578.4" y="528" textLength="67.2" lengthAdjust="spacing" fill="#b92f2f" class="b" xml:space="preserve">w 87/100</text>
-<text x="645.6" y="528" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="670.8" y="528" textLength="67.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve">last day</text>
-<text x="738.0" y="528" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="763.2" y="528" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve">16m</text>
-<text x="24" y="548" class="n">The whole week left is the budget.</text>
-<text x="24" y="580" class="t">Agent job in progress</text>
-<text x="24.0" y="606" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
-<text x="91.2" y="606" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="99.6" y="606" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
-<text x="108.0" y="606" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
-<text x="133.2" y="606" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
-<text x="141.6" y="606" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="166.8" y="606" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
-<text x="234.0" y="606" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="259.2" y="606" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
-<text x="292.8" y="606" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="318.0" y="606" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
-<text x="368.4" y="606" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="376.8" y="606" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
-<text x="385.2" y="606" textLength="75.6" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">█████████</text>
-<text x="460.8" y="606" textLength="42.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░</text>
-<text x="502.8" y="606" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
-<text x="511.2" y="606" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="519.6" y="606" textLength="33.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">5/14</text>
-<text x="553.2" y="606" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="578.4" y="606" textLength="67.2" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">w 63/100</text>
-<text x="645.6" y="606" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="670.8" y="606" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
-<text x="729.6" y="606" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="754.8" y="606" textLength="58.8" lengthAdjust="spacing" fill="#c19c00" xml:space="preserve">ctx 74%</text>
-<text x="813.6" y="606" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="838.8" y="606" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">orc</text>
-<text x="864.0" y="606" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="872.4" y="606" textLength="16.8" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">▰▰</text>
-<text x="889.2" y="606" textLength="8.4" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">▰</text>
-<text x="897.6" y="606" textLength="16.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▱▱</text>
-<text x="914.4" y="606" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="922.8" y="606" textLength="58.8" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">#43 40%</text>
-<text x="981.6" y="606" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="1006.8" y="606" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve">16m</text>
-<text x="24" y="626" class="n">A planned run shows weighted progress, and the context warning appears at 70%.</text>
-<text x="24" y="658" class="t">Verbose, counting down, fast mode</text>
-<text x="24.0" y="684" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
-<text x="91.2" y="684" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="99.6" y="684" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
-<text x="108.0" y="684" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
-<text x="133.2" y="684" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
-<text x="141.6" y="684" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="166.8" y="684" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
-<text x="234.0" y="684" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="259.2" y="684" textLength="84.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">max effort</text>
-<text x="343.2" y="684" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="368.4" y="684" textLength="75.6" lengthAdjust="spacing" fill="#c19c00" xml:space="preserve">fast mode</text>
-<text x="444.0" y="684" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="469.2" y="684" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
-<text x="519.6" y="684" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="528.0" y="684" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
-<text x="536.4" y="684" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">████████</text>
-<text x="603.6" y="684" textLength="50.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░░</text>
-<text x="654.0" y="684" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
-<text x="662.4" y="684" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="670.8" y="684" textLength="75.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">8/14 left</text>
-<text x="746.4" y="684" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="771.6" y="684" textLength="134.4" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">week 36/100 left</text>
-<text x="906.0" y="684" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="931.2" y="684" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
-<text x="990.0" y="684" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="1015.2" y="684" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve">16m</text>
-<text x="24" y="704" class="n">verbose and countDirection in paceline.json; fast mode from settings.</text>
-<text x="24" y="736" class="t">Both limits, as the Go line</text>
-<text x="24.0" y="762" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
-<text x="91.2" y="762" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="99.6" y="762" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
-<text x="108.0" y="762" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
-<text x="133.2" y="762" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
-<text x="141.6" y="762" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="166.8" y="762" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
-<text x="234.0" y="762" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="259.2" y="762" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
-<text x="292.8" y="762" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="318.0" y="762" textLength="42.0" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">s 22%</text>
-<text x="360.0" y="762" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="385.2" y="762" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
-<text x="435.6" y="762" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="444.0" y="762" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
-<text x="452.4" y="762" textLength="75.6" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">█████████</text>
-<text x="528.0" y="762" textLength="42.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░</text>
-<text x="570.0" y="762" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
-<text x="578.4" y="762" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
-<text x="586.8" y="762" textLength="33.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">5/14</text>
-<text x="620.4" y="762" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="645.6" y="762" textLength="67.2" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">w 63/100</text>
-<text x="712.8" y="762" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="738.0" y="762" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
-<text x="796.8" y="762" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
-<text x="822.0" y="762" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve">16m</text>
-<text x="24" y="782" class="n">"limits": "both" skips the forecast and shows the session too.</text>
+<text x="754.8" y="60" textLength="16.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">2m</text>
+<path d="M520.6 65V69H552.2V65" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<text x="24" y="90" class="n">The day starts with its budget, 14 points of the week; none of it is spent.</text>
+<text x="24" y="120" class="t">Working through the day</text>
+<text x="24.0" y="146" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
+<text x="91.2" y="146" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="99.6" y="146" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
+<text x="108.0" y="146" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
+<text x="133.2" y="146" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
+<text x="141.6" y="146" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="166.8" y="146" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
+<text x="234.0" y="146" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="259.2" y="146" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
+<text x="292.8" y="146" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="318.0" y="146" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
+<text x="368.4" y="146" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="376.8" y="146" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
+<text x="385.2" y="146" textLength="75.6" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">█████████</text>
+<text x="460.8" y="146" textLength="42.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░</text>
+<text x="502.8" y="146" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
+<text x="511.2" y="146" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="519.6" y="146" textLength="33.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">5/14</text>
+<text x="553.2" y="146" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="578.4" y="146" textLength="67.2" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">w 63/100</text>
+<text x="645.6" y="146" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="670.8" y="146" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
+<text x="729.6" y="146" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="754.8" y="146" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve">47m</text>
+<line x1="500.8" y1="155" x2="393.2" y2="155" stroke="#e8c468" stroke-width="1.5" marker-end="url(#head)"/>
+<text x="24" y="176" class="n">Spent points drain the bar; green while there is room.</text>
+<text x="24" y="206" class="t">Session time</text>
+<text x="24.0" y="232" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
+<text x="91.2" y="232" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="99.6" y="232" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
+<text x="108.0" y="232" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
+<text x="133.2" y="232" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
+<text x="141.6" y="232" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="166.8" y="232" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
+<text x="234.0" y="232" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="259.2" y="232" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
+<text x="292.8" y="232" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="318.0" y="232" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
+<text x="368.4" y="232" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="376.8" y="232" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
+<text x="385.2" y="232" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">████████</text>
+<text x="452.4" y="232" textLength="50.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░░</text>
+<text x="502.8" y="232" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
+<text x="511.2" y="232" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="519.6" y="232" textLength="33.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">6/14</text>
+<text x="553.2" y="232" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="578.4" y="232" textLength="67.2" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">w 64/100</text>
+<text x="645.6" y="232" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="670.8" y="232" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
+<text x="729.6" y="232" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="754.8" y="232" textLength="42.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">2h12m</text>
+<path d="M755.8 237V241H795.8V237" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<text x="24" y="262" class="n">How long this session has been running; it counts up as you work.</text>
+<text x="24" y="292" class="t">Most of the budget used</text>
+<text x="24.0" y="318" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
+<text x="91.2" y="318" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="99.6" y="318" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
+<text x="108.0" y="318" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
+<text x="133.2" y="318" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
+<text x="141.6" y="318" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="166.8" y="318" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
+<text x="234.0" y="318" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="259.2" y="318" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
+<text x="292.8" y="318" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="318.0" y="318" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
+<text x="368.4" y="318" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="376.8" y="318" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
+<text x="385.2" y="318" textLength="25.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">███</text>
+<text x="410.4" y="318" textLength="92.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░░░░░░░</text>
+<text x="502.8" y="318" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
+<text x="511.2" y="318" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="519.6" y="318" textLength="42.0" lengthAdjust="spacing" fill="#c19c00" xml:space="preserve">11/14</text>
+<text x="561.6" y="318" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="586.8" y="318" textLength="67.2" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">w 69/100</text>
+<text x="654.0" y="318" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="679.2" y="318" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
+<text x="738.0" y="318" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="763.2" y="318" textLength="42.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">1h52m</text>
+<line x1="500.8" y1="327" x2="393.2" y2="327" stroke="#e8c468" stroke-width="1.5" marker-end="url(#head)"/>
+<path d="M520.6 323V327H560.6V323" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<text x="24" y="348" class="n">Yellow past 70% of the budget, red past 85%.</text>
+<text x="24" y="378" class="t">Over budget</text>
+<text x="24.0" y="404" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
+<text x="91.2" y="404" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="99.6" y="404" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
+<text x="108.0" y="404" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
+<text x="133.2" y="404" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
+<text x="141.6" y="404" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="166.8" y="404" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
+<text x="234.0" y="404" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="259.2" y="404" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
+<text x="292.8" y="404" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="318.0" y="404" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
+<text x="368.4" y="404" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="376.8" y="404" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
+<text x="385.2" y="404" textLength="25.2" lengthAdjust="spacing" fill="#b92f2f" xml:space="preserve">███</text>
+<text x="410.4" y="404" textLength="92.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░░░░░░░</text>
+<text x="502.8" y="404" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
+<text x="511.2" y="404" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="519.6" y="404" textLength="42.0" lengthAdjust="spacing" fill="#b92f2f" xml:space="preserve">17/14</text>
+<text x="561.6" y="404" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="570.0" y="404" textLength="75.6" lengthAdjust="spacing" fill="#b92f2f" xml:space="preserve">→ 13 tmrw</text>
+<text x="645.6" y="404" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="670.8" y="404" textLength="67.2" lengthAdjust="spacing" fill="#c19c00" class="b" xml:space="preserve">w 75/100</text>
+<text x="738.0" y="404" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="763.2" y="404" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
+<text x="822.0" y="404" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="847.2" y="404" textLength="42.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">2h40m</text>
+<line x1="387.2" y1="413" x2="494.8" y2="413" stroke="#e8c468" stroke-width="1.5" marker-end="url(#head)"/>
+<path d="M571.0 409V413H644.6V409" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<text x="24" y="434" class="n">The overage turns red, and tomorrow's budget shrinks to match.</text>
+<text x="24" y="464" class="t">Over budget by a whole day</text>
+<text x="24.0" y="490" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
+<text x="91.2" y="490" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="99.6" y="490" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
+<text x="108.0" y="490" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
+<text x="133.2" y="490" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
+<text x="141.6" y="490" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="166.8" y="490" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
+<text x="234.0" y="490" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="259.2" y="490" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
+<text x="292.8" y="490" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="318.0" y="490" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
+<text x="368.4" y="490" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="376.8" y="490" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
+<text x="385.2" y="490" textLength="117.6" lengthAdjust="spacing" fill="#b92f2f" xml:space="preserve">██████████████</text>
+<text x="502.8" y="490" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
+<text x="511.2" y="490" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="519.6" y="490" textLength="42.0" lengthAdjust="spacing" fill="#b92f2f" xml:space="preserve">28/14</text>
+<text x="561.6" y="490" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="570.0" y="490" textLength="67.2" lengthAdjust="spacing" fill="#b92f2f" xml:space="preserve">→ 7 tmrw</text>
+<text x="637.2" y="490" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="662.4" y="490" textLength="67.2" lengthAdjust="spacing" fill="#b92f2f" class="b" xml:space="preserve">w 86/100</text>
+<text x="729.6" y="490" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="754.8" y="490" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
+<text x="813.6" y="490" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="838.8" y="490" textLength="42.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">4h15m</text>
+<line x1="387.2" y1="499" x2="494.8" y2="499" stroke="#e8c468" stroke-width="1.5" marker-end="url(#head)"/>
+<path d="M571.0 495V499H636.2V495" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<text x="24" y="520" class="n">Twice the budget fills the bar with red, and tomorrow gets half a day.</text>
+<text x="24" y="550" class="t">Week forecast to run out</text>
+<text x="24.0" y="576" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
+<text x="91.2" y="576" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="99.6" y="576" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
+<text x="108.0" y="576" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
+<text x="133.2" y="576" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
+<text x="141.6" y="576" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="166.8" y="576" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
+<text x="234.0" y="576" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="259.2" y="576" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
+<text x="292.8" y="576" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="318.0" y="576" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
+<text x="368.4" y="576" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="376.8" y="576" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
+<text x="385.2" y="576" textLength="42.0" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">█████</text>
+<text x="427.2" y="576" textLength="75.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░░░░░</text>
+<text x="502.8" y="576" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
+<text x="511.2" y="576" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="519.6" y="576" textLength="33.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">9/14</text>
+<text x="553.2" y="576" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="578.4" y="576" textLength="67.2" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">w 67/100</text>
+<text x="645.6" y="576" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="670.8" y="576" textLength="67.2" lengthAdjust="spacing" fill="#c19c00" xml:space="preserve">out ~Fri</text>
+<text x="738.0" y="576" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="763.2" y="576" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve">38m</text>
+<path d="M671.8 581V585H737.0V581" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<text x="24" y="606" class="n">At the current pace the week ends before it resets.</text>
+<text x="24" y="636" class="t">Session running low</text>
+<text x="24.0" y="662" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
+<text x="91.2" y="662" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="99.6" y="662" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
+<text x="108.0" y="662" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
+<text x="133.2" y="662" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
+<text x="141.6" y="662" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="166.8" y="662" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
+<text x="234.0" y="662" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="259.2" y="662" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
+<text x="292.8" y="662" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="318.0" y="662" textLength="42.0" lengthAdjust="spacing" fill="#c19c00" xml:space="preserve">s 72%</text>
+<text x="360.0" y="662" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="385.2" y="662" textLength="100.8" lengthAdjust="spacing" fill="#b92f2f" xml:space="preserve">out ~10:15am</text>
+<text x="486.0" y="662" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="511.2" y="662" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
+<text x="561.6" y="662" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="570.0" y="662" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
+<text x="578.4" y="662" textLength="75.6" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">█████████</text>
+<text x="654.0" y="662" textLength="42.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░</text>
+<text x="696.0" y="662" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
+<text x="704.4" y="662" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="712.8" y="662" textLength="33.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">5/14</text>
+<text x="746.4" y="662" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="771.6" y="662" textLength="67.2" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">w 63/100</text>
+<text x="838.8" y="662" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="864.0" y="662" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
+<text x="922.8" y="662" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="948.0" y="662" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3h5m</text>
+<path d="M319.0 667V671H359.0V667" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<path d="M386.2 667V671H485.0V667" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<text x="24" y="692" class="n">With the session segment on, its reset time becomes out ~10:15am, in red.</text>
+<text x="24" y="722" class="t">The last day</text>
+<text x="24.0" y="748" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
+<text x="91.2" y="748" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="99.6" y="748" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
+<text x="108.0" y="748" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
+<text x="133.2" y="748" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
+<text x="141.6" y="748" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="166.8" y="748" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
+<text x="234.0" y="748" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="259.2" y="748" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
+<text x="292.8" y="748" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="318.0" y="748" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
+<text x="368.4" y="748" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="376.8" y="748" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
+<text x="385.2" y="748" textLength="100.8" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">████████████</text>
+<text x="486.0" y="748" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
+<text x="494.4" y="748" textLength="134.4" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">████████████████</text>
+<text x="628.8" y="748" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▏</text>
+<text x="637.2" y="748" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="645.6" y="748" textLength="33.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">6/40</text>
+<text x="679.2" y="748" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="687.6" y="748" textLength="75.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">+20 saved</text>
+<text x="763.2" y="748" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="788.4" y="748" textLength="67.2" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">w 66/100</text>
+<text x="855.6" y="748" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="880.8" y="748" textLength="67.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve">last day</text>
+<text x="948.0" y="748" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="973.2" y="748" textLength="42.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">1h10m</text>
+<path d="M688.6 753V757H762.2V753" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<path d="M881.8 753V757H947.0V753" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<text x="24" y="778" class="n">Whatever the week has left is today's budget; with plenty left, go hard if you need to.</text>
+<text x="24" y="808" class="t">Agent job in progress</text>
+<text x="24.0" y="834" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
+<text x="91.2" y="834" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="99.6" y="834" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
+<text x="108.0" y="834" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
+<text x="133.2" y="834" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
+<text x="141.6" y="834" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="166.8" y="834" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
+<text x="234.0" y="834" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="259.2" y="834" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
+<text x="292.8" y="834" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="318.0" y="834" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
+<text x="368.4" y="834" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="376.8" y="834" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
+<text x="385.2" y="834" textLength="75.6" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">█████████</text>
+<text x="460.8" y="834" textLength="42.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░</text>
+<text x="502.8" y="834" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
+<text x="511.2" y="834" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="519.6" y="834" textLength="33.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">5/14</text>
+<text x="553.2" y="834" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="578.4" y="834" textLength="67.2" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">w 63/100</text>
+<text x="645.6" y="834" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="670.8" y="834" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
+<text x="729.6" y="834" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="754.8" y="834" textLength="58.8" lengthAdjust="spacing" fill="#c19c00" xml:space="preserve">ctx 74%</text>
+<text x="813.6" y="834" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="838.8" y="834" textLength="33.6" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">loop</text>
+<text x="872.4" y="834" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="880.8" y="834" textLength="16.8" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">▰▰</text>
+<text x="897.6" y="834" textLength="8.4" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">▰</text>
+<text x="906.0" y="834" textLength="16.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▱▱</text>
+<text x="922.8" y="834" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="931.2" y="834" textLength="58.8" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">#43 40%</text>
+<text x="990.0" y="834" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="1015.2" y="834" textLength="42.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">5h22m</text>
+<path d="M755.8 839V843H812.6V839" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<path d="M839.8 839V843H989.0V839" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<text x="24" y="864" class="n">A long agent job, such as a loop, shows its progress; the context warning appears at 70%.</text>
+<text x="24" y="894" class="t">An /orc-loop run and its review batch</text>
+<text x="24.0" y="920" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
+<text x="91.2" y="920" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="99.6" y="920" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
+<text x="108.0" y="920" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
+<text x="133.2" y="920" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
+<text x="141.6" y="920" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="166.8" y="920" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
+<text x="234.0" y="920" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="259.2" y="920" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
+<text x="292.8" y="920" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="318.0" y="920" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
+<text x="368.4" y="920" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="376.8" y="920" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
+<text x="385.2" y="920" textLength="75.6" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">█████████</text>
+<text x="460.8" y="920" textLength="42.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░</text>
+<text x="502.8" y="920" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
+<text x="511.2" y="920" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="519.6" y="920" textLength="33.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">5/14</text>
+<text x="553.2" y="920" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="578.4" y="920" textLength="67.2" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">w 63/100</text>
+<text x="645.6" y="920" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="670.8" y="920" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
+<text x="729.6" y="920" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="754.8" y="920" textLength="33.6" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">loop</text>
+<text x="788.4" y="920" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="796.8" y="920" textLength="16.8" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">▰▰</text>
+<text x="813.6" y="920" textLength="8.4" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">▰</text>
+<text x="822.0" y="920" textLength="16.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▱▱</text>
+<text x="838.8" y="920" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="847.2" y="920" textLength="58.8" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">#44 2/5</text>
+<text x="906.0" y="920" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="931.2" y="920" textLength="67.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">7 issues</text>
+<text x="998.4" y="920" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="1023.6" y="920" textLength="75.6" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">2 reviews</text>
+<text x="1099.2" y="920" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="1124.4" y="920" textLength="58.8" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">✓ ready</text>
+<text x="1183.2" y="920" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="1208.4" y="920" textLength="42.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3h34m</text>
+<path d="M755.8 925V929H905.0V925" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<path d="M932.2 925V929H1182.2V925" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<text x="24" y="950" class="n">orc-pack's /orc-loop: one cell per issue, and where the dev -&gt; main batch stands in review.</text>
+<text x="24" y="980" class="t">Verbose, counting down, fast mode</text>
+<text x="24.0" y="1006" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
+<text x="91.2" y="1006" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="99.6" y="1006" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
+<text x="108.0" y="1006" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
+<text x="133.2" y="1006" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
+<text x="141.6" y="1006" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="166.8" y="1006" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
+<text x="234.0" y="1006" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="259.2" y="1006" textLength="84.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">max effort</text>
+<text x="343.2" y="1006" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="368.4" y="1006" textLength="75.6" lengthAdjust="spacing" fill="#c19c00" xml:space="preserve">fast mode</text>
+<text x="444.0" y="1006" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="469.2" y="1006" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
+<text x="519.6" y="1006" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="528.0" y="1006" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
+<text x="536.4" y="1006" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">████████</text>
+<text x="603.6" y="1006" textLength="50.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░░</text>
+<text x="654.0" y="1006" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
+<text x="662.4" y="1006" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="670.8" y="1006" textLength="75.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">8/14 left</text>
+<text x="746.4" y="1006" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="771.6" y="1006" textLength="134.4" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">week 36/100 left</text>
+<text x="906.0" y="1006" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="931.2" y="1006" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
+<text x="990.0" y="1006" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="1015.2" y="1006" textLength="16.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">9m</text>
+<path d="M260.2 1011V1015H342.2V1011" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<path d="M369.4 1011V1015H443.0V1011" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<path d="M671.8 1011V1015H745.4V1011" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<path d="M772.6 1011V1015H905.0V1011" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<text x="24" y="1036" class="n">verbose and countDirection in paceline.json; fast mode from settings.</text>
+<text x="24" y="1066" class="t">Both limits, as the Go line</text>
+<text x="24.0" y="1092" textLength="67.2" lengthAdjust="spacing" fill="#f2af48" xml:space="preserve">paceline</text>
+<text x="91.2" y="1092" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="99.6" y="1092" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">(</text>
+<text x="108.0" y="1092" textLength="25.2" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">dev</text>
+<text x="133.2" y="1092" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">)</text>
+<text x="141.6" y="1092" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="166.8" y="1092" textLength="67.2" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">Opus 5.5</text>
+<text x="234.0" y="1092" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="259.2" y="1092" textLength="33.6" lengthAdjust="spacing" fill="#767676" xml:space="preserve">high</text>
+<text x="292.8" y="1092" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="318.0" y="1092" textLength="42.0" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">s 22%</text>
+<text x="360.0" y="1092" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="385.2" y="1092" textLength="50.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">Today:</text>
+<text x="435.6" y="1092" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="444.0" y="1092" textLength="8.4" lengthAdjust="spacing" fill="#767676" xml:space="preserve">▕</text>
+<text x="452.4" y="1092" textLength="75.6" lengthAdjust="spacing" fill="#3a96dd" xml:space="preserve">█████████</text>
+<text x="528.0" y="1092" textLength="42.0" lengthAdjust="spacing" fill="#767676" xml:space="preserve">░░░░░</text>
+<text x="570.0" y="1092" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve">│</text>
+<text x="578.4" y="1092" textLength="8.4" lengthAdjust="spacing" fill="#cccccc" xml:space="preserve"> </text>
+<text x="586.8" y="1092" textLength="33.6" lengthAdjust="spacing" fill="#13a10e" xml:space="preserve">5/14</text>
+<text x="620.4" y="1092" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="645.6" y="1092" textLength="67.2" lengthAdjust="spacing" fill="#13a10e" class="b" xml:space="preserve">w 63/100</text>
+<text x="712.8" y="1092" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="738.0" y="1092" textLength="58.8" lengthAdjust="spacing" fill="#767676" xml:space="preserve">3d left</text>
+<text x="796.8" y="1092" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve"> · </text>
+<text x="822.0" y="1092" textLength="25.2" lengthAdjust="spacing" fill="#767676" xml:space="preserve">25m</text>
+<path d="M319.0 1097V1101H359.0V1097" fill="none" stroke="#e8c468" stroke-width="1.5"/>
+<text x="24" y="1122" class="n">"limits": "both" skips the forecast and shows the session too.</text>
 </svg>
