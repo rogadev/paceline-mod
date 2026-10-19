@@ -47,6 +47,10 @@ const MIN_FALLBACK_HOURS = 3
 const RATE_FULL_HOURS = 4
 /** The burn rate needs at least this much day weight behind it. */
 const MIN_RATE_WEIGHT = 0.25
+/** More weekly points than a day can spend; a day on record above it is corrupt. */
+const MAX_DAY_SPENT = 100
+/** Two readings whose reset times differ by less than this share a window. */
+const SAME_WINDOW_MS = 10 * MINUTE
 
 /**
  * Which hours of a day had readings, and which saw usage go up, as 24-bit
@@ -58,8 +62,17 @@ export type DayActivity = { seen: number; active: number; spent?: number }
 export type Activity = {
   /** Keyed by `yyyymmdd` in local time. */
   days: Record<string, DayActivity>
-  /** The latest readings, to tell when usage went up. */
-  last?: { session?: number; week?: number; changedAtMs?: number }
+  /**
+   * The highest reading of each limit in its current window, to tell when
+   * usage went up, with the reset time that names the window.
+   */
+  last?: {
+    session?: number
+    sessionResetsAt?: number
+    week?: number
+    weekResetsAt?: number
+    changedAtMs?: number
+  }
 }
 
 const bit = (hour: number) => 1 << hour
@@ -80,6 +93,49 @@ export function isActivity(a: unknown): a is Activity {
 }
 
 /**
+ * Carries a record from builds before 0.4.1 over: the hours seen and active,
+ * without the last readings or any day's points spent above what a day can
+ * hold, since those builds counted an idle session's older reading as use.
+ */
+export function migrateActivity(old: unknown): Activity | null {
+  if (!isActivity(old)) return null
+  const days: Record<string, DayActivity> = {}
+  for (const [key, d] of Object.entries(old.days)) {
+    days[key] =
+      d.spent !== undefined && d.spent <= MAX_DAY_SPENT
+        ? { seen: d.seen, active: d.active, spent: d.spent }
+        : { seen: d.seen, active: d.active }
+  }
+  return { days }
+}
+
+/**
+ * Compares one limit's reading with the highest one on record. Every session
+ * on the machine records into the same store, and a session that has been
+ * idle still holds an older, lower reading, so a reading below the record
+ * counts only when its reset time says a new window began. Readings without a
+ * reset time fall back to taking any drop as a reset.
+ */
+function compare(
+  used: number | undefined,
+  resetsAt: number | undefined,
+  highest: number | undefined,
+  highestResetsAt: number | undefined,
+): { gained: number; highest?: number; resetsAt?: number } {
+  if (used === undefined) return { gained: 0, highest, resetsAt: highestResetsAt }
+  if (highest === undefined) return { gained: 0, highest: used, resetsAt }
+  if (resetsAt !== undefined && highestResetsAt !== undefined) {
+    const shift = (resetsAt - highestResetsAt) * 1000
+    // A window that ended already: a stale reading.
+    if (shift <= -SAME_WINDOW_MS) return { gained: 0, highest, resetsAt: highestResetsAt }
+    // A new window starts its record over.
+    if (shift >= SAME_WINDOW_MS) return { gained: 0, highest: used, resetsAt }
+    return { gained: Math.max(0, used - highest), highest: Math.max(used, highest), resetsAt: highestResetsAt }
+  }
+  return used < highest ? { gained: 0, highest: used, resetsAt } : { gained: used - highest, highest: used, resetsAt }
+}
+
+/**
  * Records one reading: marks this hour as seen, and as active when either
  * limit's usage went up since the last reading. Returns the new record, and
  * whether it changed, so the store is written only when it must be.
@@ -88,22 +144,22 @@ export function recordActivity(
   prev: Activity | null,
   nowMs: number,
   zone: Zone,
-  session: number | undefined,
-  week: number | undefined,
+  session: Limit | undefined,
+  week: Limit | undefined,
 ): { activity: Activity; changed: boolean } {
   const days: Record<string, DayActivity> = { ...(prev?.days ?? {}) }
   const key = dateKey(nowMs, zone)
   const h = bit(hourOf(nowMs, zone))
   const last = prev?.last
-  // A drop is a window resetting, not use.
-  const rose =
-    (session !== undefined && last?.session !== undefined && session > last.session) ||
-    (week !== undefined && last?.week !== undefined && week > last.week)
+  const s = compare(session?.usedPercentage, session?.resetsAt, last?.session, last?.sessionResetsAt)
+  const w = compare(week?.usedPercentage, week?.resetsAt, last?.week, last?.weekResetsAt)
+  const rose = s.gained > 0 || w.gained > 0
 
   const day = days[key] ?? { seen: 0, active: 0 }
-  const gained = week !== undefined && last?.week !== undefined && week > last.week ? week - last.week : 0
   const next: DayActivity = { seen: day.seen | h, active: rose ? day.active | h : day.active }
-  if (day.spent !== undefined || gained > 0) next.spent = (day.spent ?? 0) + gained
+  // A total from before stale readings were ignored can't be trusted; start the day's count over.
+  const spent = day.spent !== undefined && day.spent <= MAX_DAY_SPENT ? day.spent : undefined
+  if (spent !== undefined || w.gained > 0) next.spent = (spent ?? 0) + w.gained
   days[key] = next
 
   // Keep only the newest days.
@@ -111,14 +167,25 @@ export function recordActivity(
   for (const old of keys.slice(0, Math.max(0, keys.length - KEEP_DAYS))) delete days[old]
 
   const changedAtMs = rose ? nowMs : last?.changedAtMs
-  const activity: Activity = { days, last: { session, week, changedAtMs } }
+  const activity: Activity = {
+    days,
+    last: {
+      session: s.highest,
+      sessionResetsAt: s.resetsAt,
+      week: w.highest,
+      weekResetsAt: w.resetsAt,
+      changedAtMs,
+    },
+  }
   const changed =
     !prev ||
     next.seen !== day.seen ||
     next.active !== day.active ||
     next.spent !== day.spent ||
-    session !== last?.session ||
-    week !== last?.week ||
+    s.highest !== last?.session ||
+    s.resetsAt !== last?.sessionResetsAt ||
+    w.highest !== last?.week ||
+    w.resetsAt !== last?.weekResetsAt ||
     keys.length > KEEP_DAYS
   return { activity, changed }
 }
@@ -174,7 +241,7 @@ function recentRate(
   for (const [key, d] of Object.entries(a?.days ?? {})) {
     const spent = key === today && spentToday !== undefined ? spentToday : d.spent
     const hours = countBits(d.active)
-    if (spent === undefined || spent <= 0 || hours === 0) continue
+    if (spent === undefined || spent <= 0 || spent > MAX_DAY_SPENT || hours === 0) continue
     const ageDays = Math.max(0, Math.round((startOfDay(nowMs, zone) - dayStartOf(key, zone)) / (24 * HOUR)))
     const w = 0.5 ** ageDays * Math.min(hours, RATE_FULL_HOURS) / RATE_FULL_HOURS
     weighted += (spent / hours) * w

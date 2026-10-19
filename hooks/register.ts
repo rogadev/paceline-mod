@@ -2,10 +2,11 @@ import type { EngineInterface, Register } from 'claude-code'
 
 import { bandTree, type BandElements } from '../src/band.ts'
 import { defaultConfig, parseConfig } from '../src/config.ts'
-import { isActivity, recordActivity } from '../src/forecast.ts'
+import { isActivity, migrateActivity, recordActivity } from '../src/forecast.ts'
 import { branchIn, findGitDir, type GitFs } from '../src/gitinfo.ts'
 import {
   ACTIVITY_KEY,
+  LEGACY_ACTIVITY_KEY,
   SNAPSHOT_KEY,
   chooseSnapshot,
   configDirFrom,
@@ -93,11 +94,12 @@ async function liveLine($: EngineInterface): Promise<Line> {
   const payload = toPayload({ usage, modelId, cwd, root, sessionId, nowMs, settings, effort })
 
   const fs: GitFs = { kind: path => kindOf($, path), read: path => readText($, path) }
-  const [configText, goSnapshot, stored, storedActivity, gitDir] = await Promise.all([
+  const [configText, goSnapshot, stored, storedActivity, legacyActivity, gitDir] = await Promise.all([
     readSmall($, `${dir}/paceline.json`, MAX_CONFIG_BYTES),
     readSmall($, `${dir}/paceline-day.json`, MAX_SNAPSHOT_BYTES),
     $.store.get(SNAPSHOT_KEY),
     $.store.get(ACTIVITY_KEY),
+    $.store.get(LEGACY_ACTIVITY_KEY),
     findGitDir(fs, cwd),
   ])
   const [branch, run] = await Promise.all([branchIn(fs, gitDir), loadProgress($, gitDir, sessionId)])
@@ -105,11 +107,11 @@ async function liveLine($: EngineInterface): Promise<Line> {
   const config = configText === null ? defaultConfig() : parseConfig(configText)
   const snapshot = chooseSnapshot(goSnapshot, stored, dateKey(nowMs, 'local'), payload.rateLimits?.sevenDay)
   const recorded = recordActivity(
-    isActivity(storedActivity) ? storedActivity : null,
+    isActivity(storedActivity) ? storedActivity : migrateActivity(legacyActivity),
     nowMs,
     'local',
-    payload.rateLimits?.fiveHour?.usedPercentage,
-    payload.rateLimits?.sevenDay?.usedPercentage,
+    payload.rateLimits?.fiveHour,
+    payload.rateLimits?.sevenDay,
   )
   if (recorded.changed) await $.store.set(ACTIVITY_KEY, recorded.activity)
 

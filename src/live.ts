@@ -20,8 +20,15 @@ import { render, type Line, type LimitPick } from './render.ts'
 
 /** Where this mod keeps today's budget snapshot in its `$.store`. */
 export const SNAPSHOT_KEY = 'day'
-/** Where this mod keeps its record of active hours, for the forecast. */
-export const ACTIVITY_KEY = 'activity'
+/**
+ * Where this mod keeps its record of active hours, for the forecast. Builds
+ * before 0.4.1 used `activity` and counted an idle session's older reading
+ * as use; they may still be running, so this build leaves that key to them
+ * and keeps its own.
+ */
+export const ACTIVITY_KEY = 'activity-v2'
+/** The key builds before 0.4.1 wrote, read once to carry the hour history over. */
+export const LEGACY_ACTIVITY_KEY = 'activity'
 
 /** What the session reported for one refresh. */
 export type Figures = {

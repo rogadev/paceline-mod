@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'claude-code/testing'
 
 import { defaultConfig } from '../src/config.ts'
-import { explainForecast, forecastLimits, hourProfile, recordActivity, type Activity } from '../src/forecast.ts'
+import { explainForecast, forecastLimits, hourProfile, migrateActivity, recordActivity, type Activity } from '../src/forecast.ts'
 import { decodePayload } from '../src/payload.ts'
 import { render, toAnsi } from '../src/render.ts'
 import { dateKey } from '../src/timefmt.ts'
@@ -35,39 +35,108 @@ describe('recordActivity', () => {
   const t = at('2026-10-07T14:20:00Z')
 
   test('marks the hour active only when usage went up', () => {
-    const first = recordActivity(null, t, 'utc', 10, 50)
+    const first = recordActivity(null, t, 'utc', { usedPercentage: 10 }, { usedPercentage: 50 })
     expect(first.changed).toBe(true)
     expect(first.activity.days['20261007']).toEqual({ seen: 1 << 14, active: 0 })
 
-    const same = recordActivity(first.activity, t + 60_000, 'utc', 10, 50)
+    const same = recordActivity(first.activity, t + 60_000, 'utc', { usedPercentage: 10 }, { usedPercentage: 50 })
     expect(same.changed).toBe(false)
 
-    const rose = recordActivity(first.activity, t + 120_000, 'utc', 12, 50)
+    const rose = recordActivity(first.activity, t + 120_000, 'utc', { usedPercentage: 12 }, { usedPercentage: 50 })
     expect(rose.changed).toBe(true)
     expect(rose.activity.days['20261007'].active).toBe(1 << 14)
     expect(rose.activity.last?.changedAtMs).toBe(t + 120_000)
   })
 
   test('adds up the weekly points gained in a day', () => {
-    const a = recordActivity(null, t, 'utc', 10, 50).activity
-    const b = recordActivity(a, t + 60_000, 'utc', 12, 53).activity
-    const c = recordActivity(b, t + 120_000, 'utc', 13, 55).activity
+    const a = recordActivity(null, t, 'utc', { usedPercentage: 10 }, { usedPercentage: 50 }).activity
+    const b = recordActivity(a, t + 60_000, 'utc', { usedPercentage: 12 }, { usedPercentage: 53 }).activity
+    const c = recordActivity(b, t + 120_000, 'utc', { usedPercentage: 13 }, { usedPercentage: 55 }).activity
     expect(c.days['20261007'].spent).toBe(5)
   })
 
   test('a window resetting is not use', () => {
-    const before = recordActivity(null, t, 'utc', 95, 50).activity
-    const reset = recordActivity(before, t + 60_000, 'utc', 0, 50)
+    const before = recordActivity(null, t, 'utc', { usedPercentage: 95 }, { usedPercentage: 50 }).activity
+    const reset = recordActivity(before, t + 60_000, 'utc', { usedPercentage: 0 }, { usedPercentage: 50 })
     expect(reset.activity.days['20261007'].active).toBe(0)
+  })
+
+  test('an idle session holding an older reading never counts as use', () => {
+    const sResets = sec('2026-10-07T16:00:00Z')
+    const wResets = sec('2026-10-09T07:00:00Z')
+    const fresh = { usedPercentage: 85, resetsAt: wResets }
+    const stale = { usedPercentage: 83, resetsAt: wResets }
+    let a = recordActivity(null, t, 'utc', { usedPercentage: 9, resetsAt: sResets }, fresh).activity
+    // Two sessions refresh in turn, each with its own week reading.
+    for (let i = 1; i <= 20; i++) {
+      const week = i % 2 === 0 ? fresh : stale
+      a = recordActivity(a, t + i * 15_000, 'utc', { usedPercentage: 9, resetsAt: sResets }, week).activity
+    }
+    expect(a.days['20261007']).toEqual({ seen: 1 << 14, active: 0 })
+    expect(a.last?.week).toBe(85)
+  })
+
+  test('a new window starts the record over, and a reading from the old one is ignored', () => {
+    const old = sec('2026-10-07T15:00:00Z')
+    const next = sec('2026-10-07T20:00:00Z')
+    const a = recordActivity(null, t, 'utc', { usedPercentage: 95, resetsAt: old }, undefined).activity
+    const b = recordActivity(a, t + 60_000, 'utc', { usedPercentage: 2, resetsAt: next }, undefined).activity
+    expect(b.last?.session).toBe(2)
+    expect(b.days['20261007'].active).toBe(0)
+    const c = recordActivity(b, t + 120_000, 'utc', { usedPercentage: 95, resetsAt: old }, undefined).activity
+    expect(c.last?.session).toBe(2)
+    expect(c.days['20261007'].active).toBe(0)
+  })
+
+  test('a day total too large to be real starts over', () => {
+    const a: Activity = { days: { '20261007': { seen: 0, active: 0, spent: 13798 } }, last: { week: 50 } }
+    const b = recordActivity(a, t, 'utc', undefined, { usedPercentage: 51 }).activity
+    expect(b.days['20261007'].spent).toBe(1)
   })
 
   test('keeps only the newest 14 days', () => {
     let a: Activity = { days: {} }
     for (let i = 20; i >= 1; i--) a.days[dateKey(t - i * 24 * HOUR, 'utc')] = { seen: 1, active: 1 }
-    a = recordActivity(a, t, 'utc', 1, 1).activity
+    a = recordActivity(a, t, 'utc', { usedPercentage: 1 }, { usedPercentage: 1 }).activity
     const keys = Object.keys(a.days).sort()
     expect(keys.length).toBe(14)
     expect(keys[keys.length - 1]).toBe('20261007')
+  })
+})
+
+describe('corrupt history', () => {
+  test('a record from an older build keeps its hours and drops totals no day can reach', () => {
+    const old = {
+      days: {
+        '20261018': { seen: 7, active: 3, spent: 13798 },
+        '20261017': { seen: 1, active: 1, spent: 12 },
+      },
+      last: { week: 85, changedAtMs: 1 },
+    }
+    expect(migrateActivity(old)).toEqual({
+      days: { '20261018': { seen: 7, active: 3 }, '20261017': { seen: 1, active: 1, spent: 12 } },
+    })
+    expect(migrateActivity({ nope: true })).toBeNull()
+  })
+
+
+  test('a day with more points spent than the week holds does not set the burn rate', () => {
+    const now = at('2026-10-19T17:25:00Z')
+    const activity = nineToFive(now, 7)
+    activity.days['20261018'] = { seen: 0xffffff, active: 0b1_1111_1111 << 8, spent: 13798 }
+    activity.days['20261019'] = { seen: 0b111 << 15, active: 0b111 << 15 }
+    activity.last = { session: 9, week: 85, changedAtMs: now - 60_000 }
+    const r = explainForecast({
+      nowMs: now,
+      zone: 'utc',
+      session: { usedPercentage: 9, resetsAt: sec('2026-10-19T20:00:00Z') },
+      week: { usedPercentage: 85, resetsAt: sec('2026-10-22T07:00:00Z') },
+      activity,
+      weekAtDayStart: 83,
+    })
+    expect(r?.trace.week.rate).toBeLessThan(5)
+    const out = r?.trace.week.projection.outAt
+    expect(out === undefined || out > sec('2026-10-19T20:00:00Z')).toBe(true)
   })
 })
 
