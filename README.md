@@ -81,7 +81,7 @@ The image above shows the line as it draws, in color, for the states you'll see 
 | Verbose, counting down, fast mode | `max effort · fast mode`, `8/14 left`, `week 36/100 left` | `verbose` and `countDirection` in [`paceline.json`](#configuration); fast mode comes from your settings. |
 | Both limits | `s 22%` next to the week, no `out ~` | `"limits": "both"` skips the forecast and shows the line as the Go paceline does. |
 
-The image is generated from the mod's own renderer with fixed figures, so it can't drift from what the code draws. In a terminal with colors turned off, the same text prints without color.
+The image is generated from the mod's own renderer with fixed figures by `node docs/gallery/render.mts` (Node 23.6 or later), so it matches what the code draws; run it again after changing what a segment shows. In a terminal with colors turned off, the same text prints without color.
 
 ### Run-out warnings
 
