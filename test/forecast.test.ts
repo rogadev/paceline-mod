@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'claude-code/testing'
 
 import { defaultConfig } from '../src/config.ts'
-import { forecastLimits, hourProfile, recordActivity, type Activity } from '../src/forecast.ts'
+import { explainForecast, forecastLimits, hourProfile, recordActivity, type Activity } from '../src/forecast.ts'
 import { decodePayload } from '../src/payload.ts'
 import { render, toAnsi } from '../src/render.ts'
 import { dateKey } from '../src/timefmt.ts'
@@ -155,6 +155,41 @@ describe('forecastLimits', () => {
     })
     expect(pick?.show).toBe('session')
     expect(pick?.outAt).toBeLessThan(sec('2026-10-07T14:00:00Z'))
+  })
+
+  test('a fresh install does not divide a whole day of use by its first hour', () => {
+    const now = at('2026-10-07T15:00:00Z')
+    // The mod has only seen the last hour, but 15 points were spent since midnight.
+    const activity: Activity = {
+      days: { '20261007': { seen: 1 << 15, active: 1 << 15 } },
+      last: { session: 10, week: 83, changedAtMs: now - 60_000 },
+    }
+    const pick = forecastLimits({
+      nowMs: now,
+      zone: 'utc',
+      session: { usedPercentage: 10, resetsAt: sec('2026-10-07T19:00:00Z') },
+      week: { usedPercentage: 83, resetsAt: sec('2026-10-10T07:00:00Z') },
+      activity,
+      weekAtDayStart: 68,
+    })
+    // Unscaled, 15 points in one recorded hour would run the week out within hours.
+    expect(pick?.outAt).toBeGreaterThan(sec('2026-10-08T12:00:00Z'))
+  })
+
+  test('the trace names the week rate source and agrees with the pick', () => {
+    const now = at('2026-10-07T12:00:00Z')
+    const input = {
+      nowMs: now,
+      zone: 'utc' as const,
+      session: { usedPercentage: 4, resetsAt: sec('2026-10-07T16:00:00Z') },
+      week: { usedPercentage: 58, resetsAt: sec('2026-10-09T07:00:00Z') },
+      activity: null,
+    }
+    const explained = explainForecast(input)
+    expect(explained?.pick).toEqual(forecastLimits(input))
+    expect(explained?.trace.week.rateSource).toBe('fallback')
+    expect(explained?.trace.profile.length).toBe(24)
+    expect(explained?.trace.week.projection.atReset).toBeGreaterThan(58)
   })
 
   test('no history yet still picks one', () => {

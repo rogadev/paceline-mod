@@ -191,11 +191,35 @@ function dayStartOf(key: string, zone: Zone): number {
   return zone === 'utc' ? Date.UTC(y, m, d) : new Date(y, m, d).getTime()
 }
 
-type Projection = {
+export type Projection = {
   /** Epoch seconds when the limit reaches 100%, or undefined if not before its reset. */
   outAt?: number
   /** The usage forecast at the reset, uncapped. */
   atReset: number
+}
+
+/** Where the week's burn rate came from, in the order the forecast tries them. */
+export type WeekRateSource = 'recent-days' | 'today' | 'week-average' | 'fallback'
+
+/** Every figure `forecastLimits` worked from, for the debug tool. */
+export type ForecastTrace = {
+  /** The chance of working in each local hour, 0 to 23, to two decimals. */
+  profile: number[]
+  workingNow: boolean
+  session: { used: number; resetsAt: number; activeHours: number; rate: number; projection: Projection }
+  week: {
+    used: number
+    resetsAt: number
+    rateSource: WeekRateSource
+    rate: number
+    /** Points spent today after scaling to the hours the mod saw, if the day snapshot is known. */
+    spentToday?: number
+    /** Share of today's elapsed hours the mod has readings for, 0 to 1. */
+    coverage: number
+    todayActiveHours: number
+    weekActiveHours: number
+    projection: Projection
+  }
 }
 
 /**
@@ -243,6 +267,11 @@ export type ForecastInput = {
  * closer to 100%. Returns null when there is nothing to choose between.
  */
 export function forecastLimits(input: ForecastInput): LimitPick | null {
+  return explainForecast(input)?.pick ?? null
+}
+
+/** Like `forecastLimits`, and returns the figures behind the pick too. */
+export function explainForecast(input: ForecastInput): { pick: LimitPick; trace: ForecastTrace } | null {
   const { nowMs, zone, activity } = input
   const s = input.session
   const w = input.week
@@ -270,17 +299,28 @@ export function forecastLimits(input: ForecastInput): LimitPick | null {
   const weekUsed = w.usedPercentage!
   const todayStart = startOfDay(nowMs, zone)
   const todayActive = activeHoursBetween(activity, todayStart, nowMs, zone)
-  const spentToday = input.weekAtDayStart === undefined ? undefined : weekUsed - input.weekAtDayStart
+  // The day snapshot counts everything spent today, but the active hours only
+  // cover the time the mod was running. Scale the points to that coverage so a
+  // fresh install doesn't divide a whole day's use by an hour or two.
+  const seenToday = countBits(activity?.days[dateKey(nowMs, zone)]?.seen ?? 0)
+  const coverage = Math.min(1, seenToday / Math.max((nowMs - todayStart) / HOUR, 1))
+  const spentToday =
+    input.weekAtDayStart === undefined ? undefined : (weekUsed - input.weekAtDayStart) * coverage
   const weekActive = activeHoursBetween(activity, Math.max(weekStart, nowMs - WEEK_MS), nowMs, zone)
   const recent = recentRate(activity, nowMs, zone, spentToday)
   let weekRate: number
+  let rateSource: WeekRateSource
   if (recent !== undefined) {
     weekRate = recent
+    rateSource = 'recent-days'
   } else if (spentToday !== undefined && spentToday > 0 && todayActive >= MIN_RATE_HOURS) {
     weekRate = spentToday / todayActive
+    rateSource = 'today'
   } else if (weekActive >= MIN_RATE_HOURS) {
     weekRate = weekUsed / weekActive
+    rateSource = 'week-average'
   } else {
+    rateSource = 'fallback'
     // No usable history: spread the week's use over its elapsed hours at an even chance.
     weekRate = weekUsed / Math.max(((nowMs - weekStart) / HOUR) * 0.5, MIN_FALLBACK_HOURS)
   }
@@ -288,13 +328,37 @@ export function forecastLimits(input: ForecastInput): LimitPick | null {
   const sp = project(sessionUsed, sessionRate, nowMs, sessionReset, chance)
   const wp = project(weekUsed, weekRate, nowMs, weekReset, chance)
 
+  const round = (n: number) => Math.round(n * 100) / 100
+  const trace: ForecastTrace = {
+    profile: profile.map(round),
+    workingNow,
+    session: {
+      used: sessionUsed,
+      resetsAt: s.resetsAt!,
+      activeHours: sessionActive,
+      rate: round(sessionRate),
+      projection: sp,
+    },
+    week: {
+      used: weekUsed,
+      resetsAt: w.resetsAt!,
+      rateSource,
+      rate: round(weekRate),
+      spentToday: spentToday === undefined ? undefined : round(spentToday),
+      coverage: round(coverage),
+      todayActiveHours: todayActive,
+      weekActiveHours: weekActive,
+      projection: wp,
+    },
+  }
+
   if (sp.outAt !== undefined || wp.outAt !== undefined) {
     const sessionFirst = wp.outAt === undefined || (sp.outAt !== undefined && sp.outAt <= wp.outAt)
-    return sessionFirst ? { show: 'session', outAt: sp.outAt } : { show: 'week', outAt: wp.outAt }
+    return { pick: sessionFirst ? { show: 'session', outAt: sp.outAt } : { show: 'week', outAt: wp.outAt }, trace }
   }
   const lead: LimitPick['show'] = sp.atReset >= wp.atReset ? 'session' : 'week'
   if (input.previous && input.previous !== lead && Math.abs(sp.atReset - wp.atReset) < SWITCH_MARGIN) {
-    return { show: input.previous }
+    return { pick: { show: input.previous }, trace }
   }
-  return { show: lead }
+  return { pick: { show: lead }, trace }
 }

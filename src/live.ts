@@ -11,7 +11,7 @@
 import type { SessionRateLimit, SessionUsage } from 'claude-code'
 
 import type { Config } from './config.ts'
-import { forecastLimits, type Activity } from './forecast.ts'
+import { explainForecast, type Activity, type ForecastTrace } from './forecast.ts'
 import { modelName } from './model.ts'
 import { isValidSnapshot, type Snapshot } from './pace.ts'
 import type { Limit, Payload } from './payload.ts'
@@ -134,10 +134,10 @@ export function renderLive(
   payload: Payload,
   config: Config,
   state: LiveState,
-): { line: Line; pick: LimitPick | null; save?: Snapshot } {
-  const pick =
+): { line: Line; pick: LimitPick | null; trace: ForecastTrace | null; save?: Snapshot } {
+  const forecast =
     config.limits === 'auto'
-      ? forecastLimits({
+      ? explainForecast({
           nowMs: state.nowMs,
           zone: 'local',
           session: payload.rateLimits?.fiveHour,
@@ -147,6 +147,7 @@ export function renderLive(
           previous: state.previous,
         })
       : null
+  const pick = forecast?.pick ?? null
   const changed: { save?: Snapshot } = {}
   const line = render(payload, {
     nowMs: state.nowMs,
@@ -161,5 +162,45 @@ export function renderLive(
     compact: true,
     limits: pick ?? undefined,
   })
-  return { line, pick, ...changed }
+  return { line, pick, trace: forecast?.trace ?? null, ...changed }
+}
+
+/** What `debugReport` needs besides the render's own result. */
+export type DebugInput = {
+  nowMs: number
+  payload: Payload
+  config: Config
+  state: LiveState
+  /** Which source the day snapshot came from. */
+  snapshotSource: 'go-file' | 'store' | 'none'
+  result: { pick: LimitPick | null; trace: ForecastTrace | null }
+}
+
+/**
+ * Everything behind the line's forecast as plain data, for the debug tool: the
+ * readings, the day snapshot and where it came from, the stored activity, and
+ * the forecast's own figures.
+ */
+export function debugReport(d: DebugInput) {
+  const iso = (sec: number | undefined) => (sec === undefined ? undefined : new Date(sec * 1000).toISOString())
+  const limit = (l: Limit | undefined) =>
+    l && { usedPercentage: l.usedPercentage, resetsAt: iso(l.resetsAt), resetsAtEpoch: l.resetsAt }
+  const pick = d.result.pick
+  return {
+    now: new Date(d.nowMs).toISOString(),
+    utcOffsetMinutes: -new Date(d.nowMs).getTimezoneOffset(),
+    limitsMode: d.config.limits,
+    readings: {
+      session: limit(d.payload.rateLimits?.fiveHour),
+      week: limit(d.payload.rateLimits?.sevenDay),
+    },
+    daySnapshot: { source: d.snapshotSource, value: d.state.snapshot },
+    activity: d.state.activity,
+    previousPick: d.state.previous,
+    pick: pick && { ...pick, outAtIso: iso(pick.outAt) },
+    forecast: d.result.trace,
+    note: d.result.trace
+      ? undefined
+      : 'No forecast: the config limits mode is not auto, or the session or week reading is missing.',
+  }
 }
