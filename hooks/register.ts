@@ -1,9 +1,26 @@
-import type { EngineInterface, Register } from 'claude-code'
+import type { EngineInterface, FsStat, Register } from 'claude-code'
 
 import { bandTree, type BandElements } from '../src/band.ts'
+import {
+  GIT_ENV,
+  MAX_LEDGER_BYTES,
+  ORIGIN_MAIN_REF,
+  acceptResult,
+  batchAllowed,
+  batchKey,
+  computeBatch,
+  ledgerPath,
+  ledgerScriptPath,
+  planBatch,
+  settleBatch,
+  type BatchFlow,
+  type BatchRefs,
+  type BatchState,
+  type GitOutput,
+} from '../src/batch.ts'
 import { defaultConfig, parseConfig } from '../src/config.ts'
 import { isActivity, migrateActivity, recordActivity } from '../src/forecast.ts'
-import { branchIn, findGitDir, type GitFs } from '../src/gitinfo.ts'
+import { branchIn, findRepo, readHead, resolveRef, type GitFs, type Repo } from '../src/gitinfo.ts'
 import {
   ACTIVITY_KEY,
   LEGACY_ACTIVITY_KEY,
@@ -14,6 +31,7 @@ import {
   renderLive,
   toPayload,
 } from '../src/live.ts'
+import { MAX_STATE_BYTES, decodeLoopState, loopStatePath, type LoopFile } from '../src/loop.ts'
 import { MAX_FILE_BYTES, isValidSession, parseRun, progressPath, type Run } from '../src/progress.ts'
 import type { LimitPick, Line } from '../src/render.ts'
 import { dateKey } from '../src/timefmt.ts'
@@ -23,8 +41,14 @@ import { dateKey } from '../src/timefmt.ts'
 const REFRESH_MS = 15_000
 const MAX_CONFIG_BYTES = 64 * 1024
 const MAX_SNAPSHOT_BYTES = 4096
+// HEAD, a .git file, commondir, and a loose ref are a line each; packed-refs
+// can be large, up to the 4 MiB `$.fs.read` accepts.
+const MAX_GIT_FILE_BYTES = 4096
+const MAX_PACKED_REFS_BYTES = 4 * 1024 * 1024
 const DEBUG_TOOL = 'mcp__paceline__get_forecast_debug'
 const DEBUG_COMMAND = 'paceline-debug'
+// Each batch git call gets this long before it is killed.
+const GIT_TIMEOUT_MS = 1500
 
 // Module state starts over on a reload; the first refresh refills it.
 let line: Line = []
@@ -33,35 +57,49 @@ let lastPick: LimitPick['show'] | undefined
 let lastDebug: unknown
 let running: Promise<void> | null = null
 let again = false
+// The batch's cached git results and the keys its background update runs by;
+// `planBatch` and `acceptResult` in src/batch.ts decide every change. A refresh
+// never waits on git.
+let batchFlow: BatchFlow = { cache: null, pending: null, wanted: null }
 
 // Every call on `$` stays in this file: the engine follows `$` only into
 // functions declared here, never across an import.
 
-/** Reads a small regular file's text, or null when it is missing, too big, or unreadable. */
-async function readSmall($: EngineInterface, path: string, maxBytes: number): Promise<string | null> {
+/** Reads a small regular file's text and last write time, or null when it is missing, too big, or unreadable. */
+async function readStamped(
+  $: EngineInterface,
+  path: string,
+  maxBytes: number,
+): Promise<{ text: string; mtimeMs: number } | null> {
   try {
     const stat = await $.fs.stat(path)
     if (stat.kind !== 'file' || stat.size > maxBytes) return null
-    return await $.fs.read(path)
+    return { text: await $.fs.read(path), mtimeMs: stat.mtimeMs }
+  } catch {
+    return null
+  }
+}
+
+/** Reads a small regular file's text, or null when it is missing, too big, or unreadable. */
+async function readSmall($: EngineInterface, path: string, maxBytes: number): Promise<string | null> {
+  return (await readStamped($, path, maxBytes))?.text ?? null
+}
+
+/** Reads a file under a git directory for gitinfo; anything but a small regular file reads as missing. */
+async function readGitFile($: EngineInterface, path: string): Promise<string | null> {
+  return readSmall($, path, path.endsWith('/packed-refs') ? MAX_PACKED_REFS_BYTES : MAX_GIT_FILE_BYTES)
+}
+
+async function statOf($: EngineInterface, path: string): Promise<FsStat | null> {
+  try {
+    return await $.fs.stat(path)
   } catch {
     return null
   }
 }
 
 async function kindOf($: EngineInterface, path: string): Promise<'file' | 'dir' | 'other' | null> {
-  try {
-    return (await $.fs.stat(path)).kind
-  } catch {
-    return null
-  }
-}
-
-async function readText($: EngineInterface, path: string): Promise<string | null> {
-  try {
-    return await $.fs.read(path)
-  } catch {
-    return null
-  }
+  return (await statOf($, path))?.kind ?? null
 }
 
 /** The repository's progress run for this session, or the shared run. */
@@ -75,6 +113,81 @@ async function loadProgress($: EngineInterface, gitDir: string, session: string)
   return null
 }
 
+/** The repository's `/orc-loop` state file, decoded, or null when it is missing or unreadable. */
+async function loadLoop($: EngineInterface, gitDir: string): Promise<LoopFile | null> {
+  if (gitDir === '') return null
+  const file = await readStamped($, loopStatePath(gitDir), MAX_STATE_BYTES)
+  if (file === null) return null
+  const state = decodeLoopState(file.text)
+  return state === null ? null : { state, mtimeMs: file.mtimeMs }
+}
+
+/**
+ * Reads the batch gate's inputs: HEAD, origin/main, and the ledger's stat, or
+ * null when the work tree has no deep-review `ledger.mjs`, so a repository
+ * without deep-review costs one stat.
+ */
+async function readBatchRefs($: EngineInterface, fs: GitFs, repo: Repo): Promise<BatchRefs | null> {
+  if ((await kindOf($, ledgerScriptPath(repo.workTree))) !== 'file') return null
+  const [head, mainSha, ledger] = await Promise.all([
+    readHead(fs, repo.gitDir),
+    resolveRef(fs, repo.gitDir, ORIGIN_MAIN_REF),
+    statOf($, ledgerPath(repo.workTree)),
+  ])
+  return { workTree: repo.workTree, head, mainSha, ledger: ledger && { mtimeMs: ledger.mtimeMs, size: ledger.size } }
+}
+
+/**
+ * Runs one batch git call and resolves its output, or null when git exits
+ * non-zero. Rejects when git times out or cannot start.
+ *
+ * `cwd` is a folder the repository doesn't control, so a `git` executable
+ * committed to the repository can't be found ahead of the real one; the
+ * arguments name the work tree with `-C`.
+ */
+async function runGit($: EngineInterface, cwd: string, argv: readonly string[]): Promise<GitOutput | null> {
+  const result = await $.process.run(['git', ...argv], { cwd, env: GIT_ENV, timeoutMs: GIT_TIMEOUT_MS })
+  return result.exitCode === 0 ? result : null
+}
+
+/**
+ * Computes the batch for `found.key` in the background, keeps the result when
+ * that key is still the one the latest refresh asked for, and redraws. Never
+ * rejects: a failure is logged and kept as no batch until its retry time.
+ */
+async function updateBatch(
+  $: EngineInterface,
+  workTree: string,
+  found: { key: string; headSha: string; mainSha: string },
+  hasLedger: boolean,
+  nowMs: number,
+  gitCwd: string,
+): Promise<void> {
+  const readLedger = hasLedger ? () => readSmall($, ledgerPath(workTree), MAX_LEDGER_BYTES) : null
+  const { cache, error } = await settleBatch(found.key, nowMs, () =>
+    computeBatch(argv => runGit($, gitCwd, argv), readLedger, workTree, found),
+  )
+  if (error !== undefined) $.ui.log(`paceline: batch git failed: ${String(error)}`, { to: 'debug' })
+  const accepted = acceptResult(batchFlow, cache)
+  batchFlow = accepted.next
+  if (accepted.redraw) void refresh($)
+}
+
+/**
+ * The batch to draw now, from the cache, starting a background update when
+ * `planBatch` says to. With `refs` null (the batch path was skipped), it
+ * draws nothing and forgets the wanted key.
+ */
+function currentBatch($: EngineInterface, refs: BatchRefs | null, nowMs: number, gitCwd: string): BatchState | null {
+  const found = refs === null ? null : batchKey(refs)
+  const plan = planBatch(batchFlow, found?.key ?? null, nowMs)
+  batchFlow = plan.next
+  if (plan.start && refs !== null && found !== null) {
+    void updateBatch($, refs.workTree, found, refs.ledger !== null, nowMs, gitCwd)
+  }
+  return plan.draw
+}
+
 /** Asks the session for its figures and renders the line. */
 async function liveLine($: EngineInterface): Promise<Line> {
   const [usage, modelId, cwd, root, sessionId, nowMs, settings] = await Promise.all([
@@ -86,25 +199,39 @@ async function liveLine($: EngineInterface): Promise<Line> {
     $.clock.now(),
     $.settings.read(),
   ])
+  const userProfile = await $.env.get('USERPROFILE')
   const dir = configDirFrom({
     claudeConfigDir: await $.env.get('CLAUDE_CONFIG_DIR'),
-    userProfile: await $.env.get('USERPROFILE'),
+    userProfile,
     home: await $.env.get('HOME'),
   })
   const payload = toPayload({ usage, modelId, cwd, root, sessionId, nowMs, settings, effort })
 
-  const fs: GitFs = { kind: path => kindOf($, path), read: path => readText($, path) }
-  const [configText, goSnapshot, stored, storedActivity, legacyActivity, gitDir] = await Promise.all([
-    readSmall($, `${dir}/paceline.json`, MAX_CONFIG_BYTES),
-    readSmall($, `${dir}/paceline-day.json`, MAX_SNAPSHOT_BYTES),
-    $.store.get(SNAPSHOT_KEY),
-    $.store.get(ACTIVITY_KEY),
-    $.store.get(LEGACY_ACTIVITY_KEY),
-    findGitDir(fs, cwd),
-  ])
-  const [branch, run] = await Promise.all([branchIn(fs, gitDir), loadProgress($, gitDir, sessionId)])
-
+  const fs: GitFs = { kind: path => kindOf($, path), read: path => readGitFile($, path) }
+  const [configText, goSnapshot, stored, storedActivity, legacyActivity, repo, hostGitDir, hostWorkTree] =
+    await Promise.all([
+      readSmall($, `${dir}/paceline.json`, MAX_CONFIG_BYTES),
+      readSmall($, `${dir}/paceline-day.json`, MAX_SNAPSHOT_BYTES),
+      $.store.get(SNAPSHOT_KEY),
+      $.store.get(ACTIVITY_KEY),
+      $.store.get(LEGACY_ACTIVITY_KEY),
+      findRepo(fs, cwd),
+      $.env.get('GIT_DIR'),
+      $.env.get('GIT_WORK_TREE'),
+    ])
+  // Parsed before the repository reads, so the loop or batch segment turned off costs no reads, and the batch
+  // turned off starts no git.
   const config = configText === null ? defaultConfig() : parseConfig(configText)
+  const gitDir = repo?.gitDir ?? ''
+  const allowed = batchAllowed(config.segments.batch, { gitDir: hostGitDir, workTree: hostWorkTree, userProfile }, dir)
+  const [branch, run, loop, batchRefs] = await Promise.all([
+    branchIn(fs, gitDir),
+    loadProgress($, gitDir, sessionId),
+    config.segments.loop ? loadLoop($, gitDir) : null,
+    allowed && repo !== null ? readBatchRefs($, fs, repo) : null,
+  ])
+  const batch = currentBatch($, batchRefs, nowMs, dir)
+
   const snapshot = chooseSnapshot(goSnapshot, stored, dateKey(nowMs, 'local'), payload.rateLimits?.sevenDay)
   const recorded = recordActivity(
     isActivity(storedActivity) ? storedActivity : migrateActivity(legacyActivity),
@@ -119,6 +246,8 @@ async function liveLine($: EngineInterface): Promise<Line> {
     snapshot,
     branch,
     run,
+    loop,
+    batch,
     activity: recorded.activity,
     nowMs,
     previous: lastPick,

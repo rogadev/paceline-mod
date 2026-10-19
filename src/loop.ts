@@ -60,6 +60,13 @@ export type LoopState = {
   progressOn: boolean
 }
 
+/** A decoded state file and when it was last written, what {@link loopSegment} draws from. */
+export type LoopFile = {
+  state: LoopState
+  /** The file's last write time, in epoch milliseconds. */
+  mtimeMs: number
+}
+
 /** The state file inside a git directory. */
 export function loopStatePath(gitDir: string): string {
   return `${gitDir}/orc-loop/state.json`

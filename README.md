@@ -46,6 +46,8 @@ To hide the line for a while, click the `[-]` at the right end of the band, or p
 | Week | `w 43/100 · 4d left` | How much of the weekly limit you've used, then the days until it resets, or `last day`. When the week is forecast to run out first, `out ~Tue` replaces the days left. From three days out, the figure turns bold. Verbose: `week 43/100`. |
 | Context | `ctx 72%` | Only when the context window is 70% or more full. |
 | Progress | `loop ▰▰▰▰▱ #44 3/5` | Only while an agent reports a long job's progress. See [Progress bar](#progress-bar). |
+| Loop | `loop ▰▰▰▱▱ #44 2/5` | Only during an `/orc-loop` run that doesn't report through the progress tools. See [Loop and batch](#loop-and-batch). |
+| Batch | `7 issues · 2 reviews · ✓ ready` | Where the current dev -> main batch stands in deep-review, in repos that keep a review ledger. See [Loop and batch](#loop-and-batch). |
 | Duration | `16m` | Session wall-clock time. Always last. |
 
 **Today's budget** is the weekly percentage left at the start of the day, divided by the days from midnight to the reset. It stays fixed all day. Whatever you don't spend spreads over the remaining days. Today and the week are both in weekly percentage points, so `8/14` and `w 43/100` add up. The numbers' color is your pace: green while you have room, yellow once you've used more than 70% of the budget, and red past 85%. On the final day before the reset, the budget is everything left in the week.
@@ -98,6 +100,7 @@ If you use an API key instead of a subscription, Claude Code reports no rate lim
 
 - **It draws above the prompt**, in the band mods share, not in the status line under it. A plugin can't set your status line, so the two can run side by side.
 - **A compact layout.** It puts the project ahead of the model, shows effort as the bare level, `high`, instead of `high effort`, and says when a limit [runs out early](#run-out-warnings). Otherwise, today and the week are the Go line's segments, byte for byte.
+- **Two segments of its own.** The [loop and batch](#loop-and-batch) segments sit after the others, before the duration, and only the mod draws them.
 - **No prompt-cache warning yet.** The mods API doesn't report when the prompt cache expires, so the `cache cold` segment never shows.
 - **Effort** comes from the latest turn. Until the first tool call or reply in a session, it falls back to the `effortLevel` in your settings.
 - **Fast mode** is read from the `fastMode` key in your settings, which may not match every way fast mode can be turned on.
@@ -118,7 +121,7 @@ paceline reads the same `~/.claude/paceline.json` (or `$CLAUDE_CONFIG_DIR/paceli
 }
 ```
 
-- `segments`: turn any segment on or off: `model`, `effort`, `fastMode`, `project`, `branch`, `session`, `week`, `today`, `context`, `cache`, `duration`, `progress`. Every segment is on by default except `session`.
+- `segments`: turn any segment on or off: `model`, `effort`, `fastMode`, `project`, `branch`, `session`, `week`, `today`, `context`, `cache`, `duration`, `progress`, `loop`, `batch`. Every segment is on by default except `session`. The Go paceline ignores `loop` and `batch`.
 - `thresholds`: percentages where colors change from green to yellow to red, and where the context warning appears. `headroomGreen` and `headroomYellow` count what's left of a limit.
 - `countDirection`: `"up"` or `"down"` for `session`, `week`, and `today`, each on its own. `"down"` counts what's left: today reads `6/14 left`, and past the budget, how far over (`3 over/14`); the week reads `w 57/100 left`. The bar is the same either way.
 - `quietEfforts`: effort levels that don't need a label.
@@ -144,16 +147,45 @@ loop ▰▰▰ ✓ done             finished; hidden 30 minutes later
 
 The mod reads the same progress files as the Go paceline: `.git/paceline/progress-<session id>.json` for this session's run, or `.git/paceline/progress.json` for a writer outside Claude Code. Agents write them through `paceline-mcp`, the MCP server that ships with [paceline](https://github.com/rogadev/paceline#let-agents-report-progress). The file format is documented there.
 
+## Loop and batch
+
+Two segments the Go status line never had sit after the others, before the duration. Turn either off with `segments.loop` or `segments.batch`.
+
+**Loop** draws an `/orc-loop` run from `<git dir>/orc-loop/state.json`: one cell per issue (green done, red blocked, dim skipped, cyan in flight, dim empty for the rest), then the phase.
+
+```
+loop ▰▰▰▱▱ #44 2/5          building issue 44, two of five settled
+loop ▰▰▰▰▰ review 2/3       the second review round
+loop ▰▰▰▰▰ ✓ done           finished; hidden 30 minutes later
+```
+
+`halted` shows in red, `planning` while it plans, and ` (paused)` once a build, review, or plan has gone six hours without writing the file. A run that reports through the progress tools (orc-pack 1.14.0 and later) draws in the [progress bar](#progress-bar) instead, so the loop segment hides.
+
+**Batch** shows where the current dev -> main batch stands in code review: every commit from `git merge-base origin/main HEAD` to HEAD, and the reviews deep-review recorded for it in `tmp/reviews/ledger.jsonl`. It shows only when HEAD is on a branch other than `main`, the repo has `.claude/skills/deep-review/scripts/ledger.mjs`, `origin/main` exists, and the batch has a commit.
+
+| State | Shows |
+| --- | --- |
+| No reviews | `7 issues · no review yet` (yellow) |
+| Commits since the last review | `7 issues · review stale (+2 commits)` (yellow), or `review stale` when the reviewed commit was rebased away |
+| Last review incomplete | `7 issues · 2 reviews · review incomplete` (yellow) |
+| Blockers | `7 issues · 2 reviews · 1 blocker` (red) |
+| Warnings | `7 issues · 2 reviews · 3 warnings` (yellow) |
+| Ready | `7 issues · 2 reviews · ✓ ready` (green) |
+| Anything else | `7 issues · 2 reviews · not ready` (yellow) |
+
+The lead counts the distinct issues the batch's commits reference with `refs`, `closes`, `fixes`, or `resolves #N`, or the commits when none do. Working this out takes `git`, so the mod runs it only in such repos, and only when HEAD, `origin/main`, or the ledger changes. It runs in the background, so the segment can appear a moment after the rest of the line.
+
 ## What the mod can reach
 
 A mod runs inside Claude Code with your permissions, so here is everything this one does. `claude plugin validate` on this folder lists the same calls.
 
 - **Reads** your session's usage figures, model, working folder, and settings through the mods API.
-- **Reads** `paceline.json` and `paceline-day.json` in your Claude config folder, and `.git/HEAD` and `.git/paceline/progress*.json` in the repository you're working in.
-- **Reads** the environment variables `CLAUDE_CONFIG_DIR`, `USERPROFILE`, and `HOME`, only to find your Claude config folder.
+- **Reads** `paceline.json` and `paceline-day.json` in your Claude config folder, and, in the repository you're working in, `.git/HEAD`, its branch and `origin/main` refs (and `packed-refs`), `.git/paceline/progress*.json`, and `.git/orc-loop/state.json`. In a repo that keeps a deep-review ledger, it also checks that `.claude/skills/deep-review/scripts/ledger.mjs` exists and reads `tmp/reviews/ledger.jsonl`.
+- **Reads** the environment variables `CLAUDE_CONFIG_DIR`, `USERPROFILE`, and `HOME`, only to find your Claude config folder, and `GIT_DIR` and `GIT_WORK_TREE`, only to skip the batch segment when either is set.
 - **Writes** two values to its own plugin store: today's budget anchor, and which hours of the last 14 days your usage went up in, for the forecast.
 - **Watches** tool calls and turns only to notice progress updates and the effort level. It never changes, blocks, or approves anything.
-- It starts no processes, makes no network requests, and calls no model.
+- **Starts** `git merge-base`, `git log`, and `git rev-list` only for the batch segment: only in repos that keep a deep-review ledger, off `main`, with a 1.5-second timeout each, repository hooks off, and only when HEAD, `origin/main`, or the ledger changed. A call that times out or won't start is tried again a minute later. With `segments.batch` off, it starts no processes at all. The reasoning is in [docs/notes.md](docs/notes.md#running-git-for-the-batch-segment).
+- It makes no network requests and calls no model.
 
 Text from outside paceline (folder names, branch names, model names, and progress labels) is stripped of control characters, zero-width characters, and bidi overrides before it's drawn.
 

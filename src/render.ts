@@ -8,8 +8,10 @@
  * own.
  */
 
+import { batchSegment, type BatchState } from './batch.ts'
 import { headroomLevel, projectSlot, slotColor, type RGB } from './color.ts'
 import type { Config } from './config.ts'
+import { loopSegment, type LoopFile } from './loop.ts'
 import { computeBudget, EVEN_PACE, type Budget, type Snapshot } from './pace.ts'
 import type { Payload } from './payload.ts'
 import {
@@ -83,11 +85,15 @@ export type RenderContext = {
   branch?: (dir: string) => string
   /** The progress run of the repository holding `dir`, or null. */
   progress?: (dir: string) => Run | null
+  /** The `/orc-loop` state file of the session's repository, or null. Only the compact layout draws it. */
+  loop?: () => LoopFile | null
+  /** Where the session's dev -> main batch stands in review, or null. Only the compact layout draws it. */
+  batch?: () => BatchState | null
   /**
    * Draws the mod's compact layout: the project ahead of the model, effort as
-   * the bare level, and a limit's run-out time when the forecast says it runs
-   * out before it resets. Absent, the line is the Go paceline's, byte for
-   * byte.
+   * the bare level, a limit's run-out time when the forecast says it runs out
+   * before it resets, and the loop and batch segments before the duration.
+   * Absent, the line is the Go paceline's, byte for byte.
    */
   compact?: boolean
   /**
@@ -117,6 +123,8 @@ type Part =
   | 'context'
   | 'cache'
   | 'progress'
+  | 'loop'
+  | 'batch'
   | 'duration'
 
 const GO_ORDER: readonly Part[] = [
@@ -144,6 +152,8 @@ const COMPACT_ORDER: readonly Part[] = [
   'context',
   'cache',
   'progress',
+  'loop',
+  'batch',
   'duration',
 ]
 
@@ -196,6 +206,8 @@ export function render(p: Payload, ctx: RenderContext): Line {
     context: on.context ? present(contextWarning(p, ctx)) : [],
     cache: on.cache ? present(cacheWarning(p, ctx)) : [],
     progress: on.progress ? present(progress(p, ctx)) : [],
+    loop: on.loop ? present(loop(ctx)) : [],
+    batch: on.batch ? present(batch(ctx)) : [],
     duration: on.duration ? present(elapsed(p)) : [],
   }
   return (ctx.compact ? COMPACT_ORDER : GO_ORDER).flatMap(part => parts[part])
@@ -401,6 +413,16 @@ function progress(p: Payload, ctx: RenderContext): Segment | null {
   if (dir === '' || !ctx.progress) return null
   const run = ctx.progress(dir)
   return run ? progressSegment(run, ctx.nowMs) : null
+}
+
+function loop(ctx: RenderContext): Segment | null {
+  const file = ctx.loop?.()
+  return file ? loopSegment(file.state, file.mtimeMs, ctx.nowMs) : null
+}
+
+function batch(ctx: RenderContext): Segment | null {
+  const state = ctx.batch?.()
+  return state ? batchSegment(state) : null
 }
 
 // Duration comes last in both layouts, so it sits at the right edge.

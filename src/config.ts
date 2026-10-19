@@ -18,6 +18,10 @@ export type Segments = {
   cache: boolean
   duration: boolean
   progress: boolean
+  /** The `/orc-loop` bar. Only the mod draws it; the Go paceline ignores the key. */
+  loop: boolean
+  /** The dev -> main review batch. Only the mod draws it; the Go paceline ignores the key. */
+  batch: boolean
 }
 
 /** Per usage segment, whether it counts down what's left instead of up. */
@@ -66,6 +70,8 @@ export function defaultConfig(): Config {
       cache: true,
       duration: true,
       progress: true,
+      loop: true,
+      batch: true,
     },
     thresholds: { headroomGreen: 30, headroomYellow: 15, contextWarn: 70, contextCritical: 85 },
     countDown: { session: false, week: false, today: false },
