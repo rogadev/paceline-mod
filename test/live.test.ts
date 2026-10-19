@@ -279,4 +279,11 @@ describe('band', () => {
     expect(color('terminal')).toBe('cyan')
     expect(color('desktop')).toBe('#2f9fbf')
   })
+
+  test('the terminal indents the band to line up with the rows under the prompt', () => {
+    const pad = (surface: 'terminal' | 'desktop') =>
+      (bandTree(line, el, surface) as unknown as Node).props.paddingLeft
+    expect(pad('terminal')).toBe(2)
+    expect(pad('desktop')).toBeUndefined()
+  })
 })
