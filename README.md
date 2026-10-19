@@ -70,15 +70,15 @@ The image above shows the line as it draws, in color, for the states you'll see 
 
 | State | What you see | Why |
 |---|---|---|
-| Fresh day | A full bar past the `│` marker, `0/29 +15 saved` | Nothing spent yet, and the week is running light, so the day's budget is above the even share. |
-| Working through the day | The bar shortens, `7/29` in green | Spent points drain the bar. Green while you have room. |
-| Most of the budget used | `22/29` in yellow, the bar mostly drained | Yellow past 70% of the budget, red past 85%. |
-| Over budget | A red bar and `41/29 → 24 tmrw` | The overage is counted, and tomorrow's budget shrinks to match. |
-| Week forecast to run out | `w 62/100 · out ~Sat` | At your recent pace the week ends before it resets. The warning replaces the days left. |
+| Fresh day | A full bar up to the `│` marker, `0/14` | Nothing spent yet, and the week is on pace, so the day's budget is the even share of about 14 points. |
+| Working through the day | The bar drains, `5/14` in green | Spent points drain the bar. Green while you have room. |
+| Most of the budget used | `11/14` in yellow, the bar mostly drained | Yellow past 70% of the budget, red past 85%. |
+| Over budget | A red bar and `17/14 → 13 tmrw` | The overage is counted, and tomorrow's budget shrinks to match. |
+| Week forecast to run out | `w 67/100 · out ~Fri` | At your recent pace the week ends before it resets. The warning replaces the days left. |
 | Session running low | `s 72% · out ~10:15am` in red | The session segment is off by default; once it's on, a session forecast to run out says when. |
-| The last day | `78/100 · last day` | The budget is everything left in the week. |
-| Agent job | `orc ▰▰▰▱▱ #43 2/5`, and `ctx 74%` | A long job's progress, and the context warning from 70% full. |
-| Verbose, counting down, fast mode | `max effort · fast mode`, `22/29 left`, `week 89/100 left` | `verbose` and `countDirection` in [`paceline.json`](#configuration); fast mode comes from your settings. |
+| The last day | `1/14 · w 87/100 · last day` | The budget is everything left in the week. |
+| Agent job | `orc ▰▰▰▱▱ #43 40%`, and `ctx 74%` | A long job's progress, and the context warning from 70% full. |
+| Verbose, counting down, fast mode | `max effort · fast mode`, `8/14 left`, `week 36/100 left` | `verbose` and `countDirection` in [`paceline.json`](#configuration); fast mode comes from your settings. |
 | Both limits | `s 22%` next to the week, no `out ~` | `"limits": "both"` skips the forecast and shows the line as the Go paceline does. |
 
 The image is generated from the mod's own renderer with fixed figures, so it can't drift from what the code draws. In a terminal with colors turned off, the same text prints without color.
