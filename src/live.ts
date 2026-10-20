@@ -68,6 +68,21 @@ export function toLimit(r: SessionRateLimit | undefined): Limit | undefined {
   }
 }
 
+/**
+ * Returns the effort level the band should draw after a classic hook event:
+ * the event's level, or `cached` when the event has none.
+ *
+ * An event that carries `agent_id` fired inside a subagent, whose effort is its
+ * own and not the main thread's, so it never changes the level.
+ */
+export function turnEffort(
+  cached: string | undefined,
+  event: { effort?: { level?: string }; agent_id?: string },
+): string | undefined {
+  if (event.agent_id) return cached
+  return event.effort?.level || cached
+}
+
 /** Builds the status payload from a session's figures. */
 export function toPayload(f: Figures): Payload {
   const configured = f.settings.effortLevel
