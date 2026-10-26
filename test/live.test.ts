@@ -3,7 +3,7 @@ import { describe, expect, test } from 'claude-code/testing'
 
 import { bandTree, type BandElements } from '../src/band.ts'
 import { defaultConfig, parseConfig } from '../src/config.ts'
-import { chooseSnapshot, configDirFrom, renderLive, toLimit, toPayload } from '../src/live.ts'
+import { chooseSnapshot, configDirFrom, renderLive, toLimit, toPayload, turnEffort } from '../src/live.ts'
 import { decodeLoopState } from '../src/loop.ts'
 import { modelName } from '../src/model.ts'
 import { render, toAnsi } from '../src/render.ts'
@@ -123,12 +123,49 @@ describe('live adapter', () => {
     expect(toPayload({ ...figures, effort: 'max' }).effort).toEqual({ level: 'max' })
   })
 
+  test('the setting for the session model wins over the global setting', () => {
+    const settings = { effortLevel: 'high', modelSettings: { 'claude-opus-5-5': { effortLevel: 'medium' } } }
+    expect(toPayload({ ...figures, settings }).effort).toEqual({ level: 'medium' })
+    expect(toPayload({ ...figures, modelId: 'claude-haiku-5-5', settings }).effort).toEqual({ level: 'high' })
+  })
+
   test('a window with no reset time keeps its usage', () => {
     expect(toLimit({ kind: 'five_hour', percentUsed: 30 })).toEqual({ usedPercentage: 30, resetsAt: undefined })
     expect(toLimit(undefined)).toBe(undefined)
   })
 
   const state = { snapshot: null, branch: 'dev', run: null, activity: null, nowMs, batch: null, loop: null }
+
+  describe('effort from a hook event', () => {
+    test("a tool event's effort level is recorded", () => {
+      expect(turnEffort('high', { effort: { level: 'max' } })).toBe('max')
+      expect(turnEffort(undefined, { effort: { level: 'low' } })).toBe('low')
+    })
+
+    test('an event with no effort keeps the cached level', () => {
+      expect(turnEffort('high', {})).toBe('high')
+      expect(turnEffort('high', { effort: {} })).toBe('high')
+      expect(turnEffort(undefined, {})).toBe(undefined)
+    })
+
+    test('an empty level keeps the cached level', () => {
+      expect(turnEffort('high', { effort: { level: '' } })).toBe('high')
+    })
+
+    test("a subagent's effort is ignored", () => {
+      expect(turnEffort('high', { effort: { level: 'low' }, agent_id: 'agent-7' })).toBe('high')
+      expect(turnEffort(undefined, { effort: { level: 'low' }, agent_id: 'agent-7' })).toBe(undefined)
+    })
+
+    test('a quiet level recorded over high draws no effort label', () => {
+      const drawn = (cached: string | undefined) =>
+        toAnsi(renderLive(toPayload({ ...figures, effort: cached }), defaultConfig(), state).line, true)
+      expect(drawn('high').includes('high')).toBe(true)
+      const after = drawn(turnEffort('high', { effort: { level: 'medium' } }))
+      expect(after.includes('high')).toBe(false)
+      expect(after.includes('medium')).toBe(false)
+    })
+  })
 
   test('draws the loop and batch before the duration, and drops each when toggled off', () => {
     const loop = decodeLoopState(

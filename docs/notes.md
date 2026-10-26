@@ -23,7 +23,7 @@ The Go paceline reads the status line JSON on stdin. The mod rebuilds the same p
 | Payload field | Mod source | Notes |
 |---|---|---|
 | `model.display_name` | `$.session.model()` | Returns the raw ID (`claude-opus-5-5`), not the display name. `src/model.ts` maps it. |
-| `effort.level` | `e.effort.level` on `classic.PostToolUse` and `classic.Stop` | No API reading. Falls back to `effortLevel` from `$.settings.read()` until the first turn. |
+| `effort.level` | `e.effort.level` on `classic.PostToolUse` and `classic.Stop`, skipping events that carry `agent_id` | No API reading. Falls back to `effortLevel` from `$.settings.read()` until the first turn. See [Effort lags a `/effort` change](#effort-lags-a-effort-change). |
 | `fast_mode` | `$.settings.read().fastMode` | Unverified: no API exposes fast mode, and this key may not be where Claude Code keeps it. |
 | `workspace.current_dir`, `project_dir` | `$.session.cwd()`, `$.session.root()` | |
 | `rate_limits` | `$.session.usage().rateLimits` | `{ kind: 'five_hour' | 'seven_day', percentUsed, resetsAt }`, with `resetsAt` as an ISO string. Empty off a subscription. The test showed these match the Go line exactly. |
@@ -36,6 +36,12 @@ The Go paceline reads the status line JSON on stdin. The mod rebuilds the same p
 | review batch | `git` through `$.process.run`, and `tmp/reviews/ledger.jsonl` | See [Running git for the batch segment](#running-git-for-the-batch-segment). |
 
 `session.measure` fires after each main-thread turn and whenever a rate-limit window moves a whole point. That plus a 15-second timer drives refreshes.
+
+### Effort lags a `/effort` change
+
+- **Subagent events are ignored.** An event with an `agent_id` comes from a subagent, and its `effort.level` is the subagent's own (orc dispatches agents at `low` or `high`), not the main thread's. `turnEffort` in `src/live.ts` returns the cached level for those events and for events with no `effort`.
+- **`classic.PreToolUse` can't serve as a source.** The settings-hook input for `PreToolUse` carries `effort`, but a module hook's event there is `ToolCallEnvelope` (`ClassicEventOf` in the engine's types), which has no `effort` and no `agent_id`. So the level changes only when a main-thread tool finishes or a turn stops, and a `/effort` change shows after the next tool completes.
+- **Open on #10:** whether `classic.PreToolUse`'s runtime `e` carries `effort` despite its type. Check it live before building on it.
 
 ## Validator and runtime rules
 

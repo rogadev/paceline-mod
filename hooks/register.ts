@@ -30,6 +30,7 @@ import {
   debugReport,
   renderLive,
   toPayload,
+  turnEffort,
 } from '../src/live.ts'
 import { MAX_STATE_BYTES, decodeLoopState, loopStatePath, type LoopFile } from '../src/loop.ts'
 import { MAX_FILE_BYTES, isValidSession, parseRun, progressPath, type Run } from '../src/progress.ts'
@@ -294,8 +295,8 @@ async function refreshLoop($: EngineInterface): Promise<void> {
   running = null
 }
 
-function noteEffort(level: string | undefined): void {
-  if (level) effort = level
+function noteEffort(event: Parameters<typeof turnEffort>[1]): void {
+  effort = turnEffort(effort, event)
 }
 
 // The classic and tool.call hooks below only watch, so each `.catch` lets the
@@ -340,13 +341,14 @@ export const register: Register = on => {
     return next(e)
   }).catch(($, e, next) => next(e))
 
-  // The mods API has no effort reading; these events carry the turn's.
+  // The mods API has no effort reading; PostToolUse and Stop carry the turn's.
+  // A subagent's events carry its own effort, so `noteEffort` ignores them.
   on('classic.PostToolUse', ($, e, next) => {
-    noteEffort(e.effort?.level)
+    noteEffort(e)
     return next(e)
   }).catch(($, e, next) => next(e))
   on('classic.Stop', ($, e, next) => {
-    noteEffort(e.effort?.level)
+    noteEffort(e)
     void refresh($)
     return next(e)
   }).catch(($, e, next) => next(e))
