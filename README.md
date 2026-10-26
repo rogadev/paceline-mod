@@ -105,7 +105,7 @@ If you use an API key instead of a subscription, Claude Code reports no rate lim
 - **A compact layout.** It puts the project ahead of the model, shows effort as the bare level, `high`, instead of `high effort`, and says when a limit [runs out early](#run-out-warnings). Otherwise, today and the week are the Go line's segments, byte for byte.
 - **Two segments of its own.** The [loop and batch](#loop-and-batch) segments sit after the others, before the duration, and only the mod draws them.
 - **No prompt-cache warning yet.** The mods API doesn't report when the prompt cache expires, so the `cache cold` segment never shows.
-- **Effort** comes from the latest turn. Until the first tool call or reply in a session, it falls back to the `effortLevel` in your settings.
+- **Effort** comes from the latest turn. Until the first tool call or reply in a session, it falls back to the `effortLevel` for the session's model under `modelSettings` in your settings, then to the global `effortLevel`.
 - **Fast mode** is read from the `fastMode` key in your settings, which may not match every way fast mode can be turned on.
 
 ## Configuration

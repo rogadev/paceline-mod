@@ -85,7 +85,10 @@ export function turnEffort(
 
 /** Builds the status payload from a session's figures. */
 export function toPayload(f: Figures): Payload {
-  const configured = f.settings.effortLevel
+  const perModel = (f.settings.modelSettings as Record<string, { effortLevel?: unknown } | undefined> | undefined)?.[
+    f.modelId
+  ]?.effortLevel
+  const configured = typeof perModel === 'string' ? perModel : f.settings.effortLevel
   const effort = f.effort ?? (typeof configured === 'string' ? configured : '')
   return {
     model: { displayName: modelName(f.modelId) },

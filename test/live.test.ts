@@ -123,6 +123,12 @@ describe('live adapter', () => {
     expect(toPayload({ ...figures, effort: 'max' }).effort).toEqual({ level: 'max' })
   })
 
+  test('the setting for the session model wins over the global setting', () => {
+    const settings = { effortLevel: 'high', modelSettings: { 'claude-opus-5-5': { effortLevel: 'medium' } } }
+    expect(toPayload({ ...figures, settings }).effort).toEqual({ level: 'medium' })
+    expect(toPayload({ ...figures, modelId: 'claude-haiku-5-5', settings }).effort).toEqual({ level: 'high' })
+  })
+
   test('a window with no reset time keeps its usage', () => {
     expect(toLimit({ kind: 'five_hour', percentUsed: 30 })).toEqual({ usedPercentage: 30, resetsAt: undefined })
     expect(toLimit(undefined)).toBe(undefined)
