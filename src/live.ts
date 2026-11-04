@@ -43,6 +43,8 @@ export type Figures = {
   settings: Readonly<Record<string, unknown>>
   /** The effort level of the latest turn, from a classic hook event. */
   effort?: string
+  /** The session's live effort level, from the CLAUDE_EFFORT variable Claude Code sets. */
+  envEffort?: string
 }
 
 /** Claude Code's config directory, honoring CLAUDE_CONFIG_DIR. */
@@ -83,13 +85,18 @@ export function turnEffort(
   return event.effort?.level || cached
 }
 
-/** Builds the status payload from a session's figures. */
+/**
+ * Builds the status payload from a session's figures. The effort level comes
+ * from CLAUDE_EFFORT first: Claude Code keeps it current, `/effort` included.
+ * A hook event's level is next, since it lags a `/effort` change, then the
+ * settings, which hold the default for new sessions rather than this one's.
+ */
 export function toPayload(f: Figures): Payload {
   const perModel = (f.settings.modelSettings as Record<string, { effortLevel?: unknown } | undefined> | undefined)?.[
     f.modelId
   ]?.effortLevel
   const configured = typeof perModel === 'string' ? perModel : f.settings.effortLevel
-  const effort = f.effort ?? (typeof configured === 'string' ? configured : '')
+  const effort = f.envEffort?.trim() || f.effort || (typeof configured === 'string' ? configured : '')
   return {
     model: { displayName: modelName(f.modelId) },
     effort: effort ? { level: effort } : undefined,

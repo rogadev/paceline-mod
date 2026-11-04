@@ -157,6 +157,18 @@ describe('live adapter', () => {
       expect(turnEffort(undefined, { effort: { level: 'low' }, agent_id: 'agent-7' })).toBe(undefined)
     })
 
+    test("CLAUDE_EFFORT wins over a hook event's level and the settings", () => {
+      const settings = { effortLevel: 'high', modelSettings: { [figures.modelId]: { effortLevel: 'high' } } }
+      const p = toPayload({ ...figures, settings, effort: 'high', envEffort: 'medium' })
+      expect(p.effort).toEqual({ level: 'medium' })
+    })
+
+    test('an unset or blank CLAUDE_EFFORT falls back to the hook event, then the settings', () => {
+      const settings = { effortLevel: 'high' }
+      expect(toPayload({ ...figures, settings, effort: 'low', envEffort: ' ' }).effort).toEqual({ level: 'low' })
+      expect(toPayload({ ...figures, settings }).effort).toEqual({ level: 'high' })
+    })
+
     test('a quiet level recorded over high draws no effort label', () => {
       const drawn = (cached: string | undefined) =>
         toAnsi(renderLive(toPayload({ ...figures, effort: cached }), defaultConfig(), state).line, true)

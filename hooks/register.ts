@@ -200,13 +200,14 @@ async function liveLine($: EngineInterface): Promise<Line> {
     $.clock.now(),
     $.settings.read(),
   ])
+  const envEffort = await $.env.get('CLAUDE_EFFORT')
   const userProfile = await $.env.get('USERPROFILE')
   const dir = configDirFrom({
     claudeConfigDir: await $.env.get('CLAUDE_CONFIG_DIR'),
     userProfile,
     home: await $.env.get('HOME'),
   })
-  const payload = toPayload({ usage, modelId, cwd, root, sessionId, nowMs, settings, effort })
+  const payload = toPayload({ usage, modelId, cwd, root, sessionId, nowMs, settings, effort, envEffort })
 
   const fs: GitFs = { kind: path => kindOf($, path), read: path => readGitFile($, path) }
   const [configText, goSnapshot, stored, storedActivity, legacyActivity, repo, hostGitDir, hostWorkTree] =
@@ -306,15 +307,22 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await refresh($)
     $.clock.every(REFRESH_MS, () => refresh($))
-    await $.tool.register({
-      name: 'get_forecast_debug',
-      description:
-        "Returns, as JSON, every figure behind paceline's forecast and its 'out ~time' warning: the usage readings, the day snapshot, the stored activity history, the burn rates and where they came from, and each limit's projection. Call it when asked why the line shows what it shows. Read-only.",
-    })
     await $.command.register({
       name: DEBUG_COMMAND,
       description: "Prints the figures behind paceline's forecast.",
     })
+    // The debug tool is optional. Registering it throws when the session's MCP
+    // config has a server named "paceline" (the Go paceline's), which owns the
+    // `mcp__paceline__` names; the band and /paceline-debug work without it.
+    try {
+      await $.tool.register({
+        name: 'get_forecast_debug',
+        description:
+          "Returns, as JSON, every figure behind paceline's forecast and its 'out ~time' warning: the usage readings, the day snapshot, the stored activity history, the burn rates and where they came from, and each limit's projection. Call it when asked why the line shows what it shows. Read-only.",
+      })
+    } catch {
+      // Left out for this session.
+    }
     return next(e)
   })
 
@@ -328,6 +336,13 @@ export const register: Register = on => {
     await refresh($)
     return { text: JSON.stringify(lastDebug ?? { note: 'No reading yet.' }, null, 2) }
   })
+
+  // `/effort` changed the level: redraw now rather than on the timer.
+  on('command.run', { command: 'effort' }, async ($, e, next) => {
+    const result = await next(e)
+    void refresh($)
+    return result
+  }).catch(($, e, next) => next(e))
 
   // Usage moved: a turn ended, or a rate-limit window moved a whole point.
   on('session.measure', ($, e, next) => {
