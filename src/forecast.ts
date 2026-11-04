@@ -273,7 +273,8 @@ export type ForecastTrace = {
   /** The chance of working in each local hour, 0 to 23, to two decimals. */
   profile: number[]
   workingNow: boolean
-  session: { used: number; resetsAt: number; activeHours: number; rate: number; projection: Projection }
+  /** Absent when no five-hour limit was reported. */
+  session?: { used: number; resetsAt: number; activeHours: number; rate: number; projection: Projection }
   week: {
     used: number
     resetsAt: number
@@ -331,7 +332,9 @@ export type ForecastInput = {
 /**
  * Picks the limit worth showing: the one forecast to run out first; if
  * neither runs out before it resets, the one forecast to end its window
- * closer to 100%. Returns null when there is nothing to choose between.
+ * closer to 100%. With no five-hour limit reported (a plan without one, such
+ * as a verified Ultra account), it forecasts the week alone. Returns null
+ * when the week isn't reported.
  */
 export function forecastLimits(input: ForecastInput): LimitPick | null {
   return explainForecast(input)?.pick ?? null
@@ -344,21 +347,13 @@ export function explainForecast(input: ForecastInput): { pick: LimitPick; trace:
   const w = input.week
   const hasS = s?.usedPercentage !== undefined && s.resetsAt !== undefined
   const hasW = w?.usedPercentage !== undefined && w.resetsAt !== undefined
-  if (!hasS || !hasW) return null
+  if (!hasW) return null
 
   const profile = hourProfile(activity, nowMs, zone)
   const workingNow =
     activity?.last?.changedAtMs !== undefined && nowMs - activity.last.changedAtMs <= ACTIVE_NOW_MS
   // Right now, recent use says more than the profile does.
   const chance = (ms: number) => (workingNow && ms - nowMs < HOUR ? 1 : profile[hourOf(ms, zone)])
-
-  // The session: points per active hour since its window opened.
-  const sessionReset = s.resetsAt! * 1000
-  const sessionStart = sessionReset - SESSION_MS
-  const sessionUsed = s.usedPercentage!
-  const sessionActive = activeHoursBetween(activity, sessionStart, nowMs, zone)
-  const sessionElapsed = Math.max((nowMs - sessionStart) / HOUR, 0.25)
-  const sessionRate = sessionUsed / Math.max(sessionActive || sessionElapsed, 0.5)
 
   // The week: today's average when today has enough behind it, else the week's.
   const weekReset = w.resetsAt! * 1000
@@ -392,20 +387,12 @@ export function explainForecast(input: ForecastInput): { pick: LimitPick; trace:
     weekRate = weekUsed / Math.max(((nowMs - weekStart) / HOUR) * 0.5, MIN_FALLBACK_HOURS)
   }
 
-  const sp = project(sessionUsed, sessionRate, nowMs, sessionReset, chance)
   const wp = project(weekUsed, weekRate, nowMs, weekReset, chance)
 
   const round = (n: number) => Math.round(n * 100) / 100
   const trace: ForecastTrace = {
     profile: profile.map(round),
     workingNow,
-    session: {
-      used: sessionUsed,
-      resetsAt: s.resetsAt!,
-      activeHours: sessionActive,
-      rate: round(sessionRate),
-      projection: sp,
-    },
     week: {
       used: weekUsed,
       resetsAt: w.resetsAt!,
@@ -417,6 +404,24 @@ export function explainForecast(input: ForecastInput): { pick: LimitPick; trace:
       weekActiveHours: weekActive,
       projection: wp,
     },
+  }
+
+  if (!hasS) return { pick: wp.outAt === undefined ? { show: 'week' } : { show: 'week', outAt: wp.outAt }, trace }
+
+  // The session: points per active hour since its window opened.
+  const sessionReset = s.resetsAt! * 1000
+  const sessionStart = sessionReset - SESSION_MS
+  const sessionUsed = s.usedPercentage!
+  const sessionActive = activeHoursBetween(activity, sessionStart, nowMs, zone)
+  const sessionElapsed = Math.max((nowMs - sessionStart) / HOUR, 0.25)
+  const sessionRate = sessionUsed / Math.max(sessionActive || sessionElapsed, 0.5)
+  const sp = project(sessionUsed, sessionRate, nowMs, sessionReset, chance)
+  trace.session = {
+    used: sessionUsed,
+    resetsAt: s.resetsAt!,
+    activeHours: sessionActive,
+    rate: round(sessionRate),
+    projection: sp,
   }
 
   if (sp.outAt !== undefined || wp.outAt !== undefined) {
