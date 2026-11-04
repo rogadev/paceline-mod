@@ -288,12 +288,39 @@ describe('forecastLimits', () => {
     expect(forecastLimits({ ...input, previous: 'week' })?.show).toBe('week')
   })
 
-  test('with only one limit reported there is nothing to choose', () => {
+  test('with no five-hour limit the week is forecast alone', () => {
+    const explained = explainForecast({
+      nowMs: at('2026-10-07T12:00:00Z'),
+      zone: 'utc',
+      week: { usedPercentage: 10, resetsAt: sec('2026-10-09T07:00:00Z') },
+      activity: null,
+    })
+    expect(explained?.pick).toEqual({ show: 'week' })
+    expect(explained?.trace.session).toBeUndefined()
+  })
+
+  test('with no five-hour limit the week still warns when it runs out', () => {
+    const now = at('2026-10-07T12:00:00Z')
+    const activity = aroundTheClock(now, 7)
+    activity.last = { week: 60, changedAtMs: now - 60_000 }
+    const pick = forecastLimits({
+      nowMs: now,
+      zone: 'utc',
+      week: { usedPercentage: 60, resetsAt: sec('2026-10-09T12:00:00Z') },
+      activity,
+      weekAtDayStart: 45.6,
+    })
+    expect(pick?.show).toBe('week')
+    expect(pick?.outAt).toBeGreaterThan(sec('2026-10-08T21:00:00Z'))
+    expect(pick?.outAt).toBeLessThan(sec('2026-10-08T23:00:00Z'))
+  })
+
+  test('with no weekly limit there is nothing to forecast', () => {
     expect(
       forecastLimits({
         nowMs: at('2026-10-07T12:00:00Z'),
         zone: 'utc',
-        week: { usedPercentage: 10, resetsAt: sec('2026-10-09T07:00:00Z') },
+        session: { usedPercentage: 10, resetsAt: sec('2026-10-07T15:00:00Z') },
         activity: null,
       }),
     ).toBe(null)

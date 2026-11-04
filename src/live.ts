@@ -234,6 +234,6 @@ export function debugReport(d: DebugInput) {
     forecast: d.result.trace,
     note: d.result.trace
       ? undefined
-      : 'No forecast: the config limits mode is not auto, or the session or week reading is missing.',
+      : 'No forecast: the config limits mode is not auto, or the week reading is missing.',
   }
 }

@@ -26,6 +26,8 @@ In a Claude Code session in your terminal, add this repo as a marketplace, then 
 
 Pick a scope when asked (user scope puts it in every session). The line appears above the prompt right away.
 
+To get new versions automatically, turn on auto-update for the marketplace: run `/plugin`, open the **Marketplaces** tab, select `paceline-mod`, and choose **Enable auto-update**. Claude Code leaves it off for marketplaces outside Anthropic's own, and a marketplace can't turn it on for you. Without it, update from the **Installed** tab in `/plugin` with **Update now**.
+
 Requirements:
 
 - Claude Code v2.1.287 or later. Run `claude --version` to check.
@@ -96,6 +98,8 @@ Your session and weekly limits are separate, and usually neither is close to sto
 - **A warning needs its segment on.** The session segment is off by default, so a session warning shows only once you turn it on.
 
 The forecast learns when you work. Each refresh notes which hours of the day your usage goes up, over the last 14 days, so a 9-to-5 user's nights count for little and an agent running around the clock counts every hour. The weekly burn rate is today's average per hour of work, falling back to the week's average early in the day; the session uses its own five-hour window. Until a few days are recorded, every hour counts as an even chance of working.
+
+On a plan with no five-hour limit, such as a verified Ultra account, Claude Code reports only the weekly limit. The session segment then hides, and the forecast watches the week alone.
 
 If you use an API key instead of a subscription, Claude Code reports no rate limits, so neither the bar, the week, nor a warning shows. To skip the forecast, set `"limits": "both"` in [`paceline.json`](#configuration): no warning shows, as in the Go line.
 
