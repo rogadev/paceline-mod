@@ -42,7 +42,7 @@ The Go paceline reads the status line JSON on stdin. The mod rebuilds the same p
 - **`CLAUDE_EFFORT` comes first (0.5.4).** Claude Code sets it to the session's live level, and `$.env.get` reads it. On 2026-11-04 a long-running interactive session at `medium` drew `high` from its hook events while `CLAUDE_EFFORT` and a fresh session's events both said `medium`; the cause of the stale event level wasn't found. A `command.run` hook on `effort` redraws the band as soon as `/effort` runs. The bullets below describe the fallback.
 - **Subagent events are ignored.** An event with an `agent_id` comes from a subagent, and its `effort.level` is the subagent's own (orc dispatches agents at `low` or `high`), not the main thread's. `turnEffort` in `src/live.ts` returns the cached level for those events and for events with no `effort`.
 - **`classic.PreToolUse` can't serve as a source.** The settings-hook input for `PreToolUse` carries `effort`, but a module hook's event there is `ToolCallEnvelope` (`ClassicEventOf` in the engine's types), which has no `effort` and no `agent_id`. So the level changes only when a main-thread tool finishes or a turn stops, and a `/effort` change shows after the next tool completes.
-- **Open on #10:** whether `classic.PreToolUse`'s runtime `e` carries `effort` despite its type. Check it live before building on it.
+- **#10 closed.** Whether `classic.PreToolUse`'s runtime `e` carries `effort` despite its type was never checked, and no longer matters: `CLAUDE_EFFORT` outranks any hook event's level.
 
 ## Validator and runtime rules
 
